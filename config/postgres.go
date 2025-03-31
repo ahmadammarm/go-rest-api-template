@@ -1,52 +1,49 @@
 package config
 
 import (
-	"database/sql"
-	"fmt"
-	"os"
-	"sync"
-	"time"
+    "database/sql"
+    "fmt"
+    "os"
+    "time"
 )
 
 var (
-	databaseInstance *sql.DB
-	postgresOnce     sync.Once
-	errorInit        error
+    databaseInstance *sql.DB
+    errorInit        error
 )
 
 func PostgresConnect() (*sql.DB, error) {
-	postgresOnce.Do(func() {
-		host := os.Getenv("POSTGRES_HOST")
-		port := os.Getenv("POSTGRES_PORT")
-		user := os.Getenv("POSTGRES_USER")
-		password := os.Getenv("POSTGRES_PASSWORD")
-		dbname := os.Getenv("POSTGRES_DB")
 
-		dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+    if databaseInstance != nil {
+        return databaseInstance, nil
+    }
 
-		database, err := sql.Open("postgres", dsn)
+    host := os.Getenv("POSTGRES_HOST")
+    port := os.Getenv("POSTGRES_PORT")
+    user := os.Getenv("POSTGRES_USER")
+    password := os.Getenv("POSTGRES_PASSWORD")
+    dbname := os.Getenv("POSTGRES_DB")
 
-		if err != nil {
-			errorInit = fmt.Errorf("error connecting to database: %v", err)
-			return
-		}
+    dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 
-		database.SetMaxOpenConns(25)
+    database, err := sql.Open("postgres", dsn)
 
-		database.SetMaxIdleConns(25)
+    if err != nil {
+        errorInit = fmt.Errorf("error opening database: %v", err)
+        return nil, errorInit
+    }
 
-		database.SetConnMaxLifetime(5 * time.Minute)
+    database.SetMaxOpenConns(25)
+    database.SetMaxIdleConns(25)
+    database.SetConnMaxLifetime(5 * time.Minute)
 
-		if err = database.Ping(); err != nil {
-			errorInit = fmt.Errorf("error pinging database: %v", err)
-			return
-		}
+    if err = database.Ping(); err != nil {
+        return nil, fmt.Errorf("error pinging database: %v", err)
+    }
 
-		fmt.Println("Postgres connected")
+    fmt.Println("Postgres connected")
 
-		databaseInstance = database
+    databaseInstance = database
 
-	})
-
-	return databaseInstance, errorInit
+    return databaseInstance, errorInit
 }
