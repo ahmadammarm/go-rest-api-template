@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"time"
+
+	_ "github.com/lib/pq"
 )
 
 func PostgresConnect() (*sql.DB, error) {
