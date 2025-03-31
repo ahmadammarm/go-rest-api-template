@@ -1,49 +1,38 @@
 package config
 
 import (
-    "database/sql"
-    "fmt"
-    "os"
-    "time"
-)
-
-var (
-    databaseInstance *sql.DB
-    errorInit        error
+	"database/sql"
+	"fmt"
+	"os"
+	"time"
 )
 
 func PostgresConnect() (*sql.DB, error) {
+	host := os.Getenv("POSTGRES_HOST")
+	port := os.Getenv("POSTGRES_PORT")
+	user := os.Getenv("POSTGRES_USER")
+	password := os.Getenv("POSTGRES_PASSWORD")
+	dbname := os.Getenv("POSTGRES_DB")
 
-    if databaseInstance != nil {
-        return databaseInstance, nil
-    }
+	if host == "" || port == "" || user == "" || password == "" || dbname == "" {
+		return nil, fmt.Errorf("one or more required environment variables are missing")
+	}
 
-    host := os.Getenv("POSTGRES_HOST")
-    port := os.Getenv("POSTGRES_PORT")
-    user := os.Getenv("POSTGRES_USER")
-    password := os.Getenv("POSTGRES_PASSWORD")
-    dbname := os.Getenv("POSTGRES_DB")
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 
-    dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+	databaseInstance, err := sql.Open("postgres", dsn)
+	if err != nil {
+		return nil, fmt.Errorf("error opening database: %v", err)
+	}
 
-    database, err := sql.Open("postgres", dsn)
+	databaseInstance.SetMaxOpenConns(25)
+	databaseInstance.SetMaxIdleConns(25)
+	databaseInstance.SetConnMaxLifetime(5 * time.Minute)
 
-    if err != nil {
-        errorInit = fmt.Errorf("error opening database: %v", err)
-        return nil, errorInit
-    }
+	if err = databaseInstance.Ping(); err != nil {
+		return nil, fmt.Errorf("error pinging database: %v", err)
+	}
 
-    database.SetMaxOpenConns(25)
-    database.SetMaxIdleConns(25)
-    database.SetConnMaxLifetime(5 * time.Minute)
-
-    if err = database.Ping(); err != nil {
-        return nil, fmt.Errorf("error pinging database: %v", err)
-    }
-
-    fmt.Println("Postgres connected")
-
-    databaseInstance = database
-
-    return databaseInstance, errorInit
+	fmt.Println("Postgres connected")
+	return databaseInstance, nil
 }
