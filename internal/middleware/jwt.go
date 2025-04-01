@@ -23,7 +23,7 @@ func JWTAuth() fiber.Handler {
 
 		stringToken = strings.TrimPrefix(stringToken, "Bearer ")
 
-		token, err := jwt.ParseWithClaims(stringToken, *&JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(stringToken, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 			secretKey := os.Getenv("JWT_SECRET_KEY")
 			if secretKey == "" {
 				return nil, response.JSONResponse(context, 500, "Internal Server Error", nil)
