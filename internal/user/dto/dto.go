@@ -4,10 +4,12 @@ import "time"
 
 // Request
 type UserRegisterRequest struct {
-	Name     string `json:"name" validate:"required"`
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=6"`
-	Role     string `json:"role" validate:"required,oneof=admin user" default:"user"`
+	ID        int       `json:"id"`
+	Name      string    `json:"name" validate:"required"`
+	Email     string    `json:"email" validate:"required,email"`
+	Password  string    `json:"password" validate:"required,min=6"`
+	Role      string    `json:"role" validate:"required,oneof=admin user" default:"user"`
+	CreatedAt time.Time `json:"created_at" validate:"required"`
 }
 
 type UserLoginRequest struct {
