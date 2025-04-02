@@ -1,14 +1,11 @@
 package dto
 
-import "time"
-
 // Request
 type UserRegisterRequest struct {
-	ID        int       `json:"id"`
-	Name      string    `json:"name" validate:"required"`
-	Email     string    `json:"email" validate:"required,email"`
-	Password  string    `json:"password" validate:"required,min=6"`
-	CreatedAt time.Time `json:"created_at" validate:"required"`
+	ID       int    `json:"id"`
+	Email    string `json:"email" validate:"required,email"`
+	Name     string `json:"name" validate:"required"`
+	Password string `json:"password" validate:"required,min=6"`
 }
 
 type UserLoginRequest struct {
@@ -28,19 +25,18 @@ type UserUpdateRequest struct {
 
 // Response
 type UserJWTResponse struct {
-	ID        int       `json:"id"`
-	Name      string    `json:"name"`
-	Email     string    `json:"email"`
-	Password  string    `json:"password"`
-	CreatedAt time.Time `json:"created_at"`
-	Token     string    `json:"token"`
+	ID       int    `json:"id"`
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Token    string `json:"token"`
 }
 
 type UserResponse struct {
-	ID        int       `json:"id"`
-	Name      string    `json:"name"`
-	Email     string    `json:"email"`
-	CreatedAt time.Time `json:"created_at"`
+	ID       int    `json:"id"`
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 type UserListResponse struct {

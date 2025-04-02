@@ -16,10 +16,6 @@ type UserHandler struct {
 	validation  *validator.Validate
 }
 
-func (handler *UserHandler) Router(api fiber.Router) any {
-	panic("unimplemented")
-}
-
 func (handler *UserHandler) RegisterUser(context *fiber.Ctx) error {
 	user := new(dto.UserRegisterRequest)
 	if err := context.BodyParser(user); err != nil {

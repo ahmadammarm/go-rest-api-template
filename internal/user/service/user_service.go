@@ -70,9 +70,19 @@ func (service *userServiceImpl) UpdateUser(user *userDTO.UserUpdateRequest, id i
 }
 
 func (service *userServiceImpl) GetUserByID(userId int) (*userDTO.UserResponse, error) {
-	return service.userRepo.GetUserByID(userId)
+    user, err := service.userRepo.GetUserByID(userId)
+    if err != nil {
+        return nil, err
+    }
+
+    return user, nil
 }
 
 func (service *userServiceImpl) UserList() (*userDTO.UserListResponse, error) {
-	return service.userRepo.UserList()
+	users, err := service.userRepo.UserList()
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }

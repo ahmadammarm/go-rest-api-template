@@ -40,7 +40,7 @@ func (repository *userRepoImpl) RegisterUser(user *userDTO.UserRegisterRequest) 
 		}
 	}()
 
-	query := `INSERT INTO users (name, email, password, created_at) VALUES ($1, $2, $3, $4)`
+	query := `INSERT INTO users (email, name, password) VALUES ($1, $2, $3) RETURNING id`
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 
@@ -48,7 +48,7 @@ func (repository *userRepoImpl) RegisterUser(user *userDTO.UserRegisterRequest) 
 		return err
 	}
 
-	err = tx.QueryRow(query, user.Name, user.Email, hashedPassword, user.CreatedAt).Scan(&user.ID)
+	err = tx.QueryRow(query, user.Email, user.Name, hashedPassword).Scan(&user.ID)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -103,10 +103,10 @@ func (repository *userRepoImpl) UpdateUser(user *userDTO.UserUpdateRequest, id i
 }
 
 func (repository *userRepoImpl) GetUserByID(userId int) (*userDTO.UserResponse, error) {
-	query := `SELECT id, name, email, password, created_at FROM users WHERE id = $1`
+	query := `SELECT id, name, email, password FROM users WHERE id = $1`
 	user := &userDTO.UserResponse{}
 
-	err := repository.db.QueryRow(query, userId).Scan(&user.ID, &user.Name, &user.Email, &user.CreatedAt)
+	err := repository.db.QueryRow(query, userId).Scan(&user.ID, &user.Name, &user.Email, &user.Password)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.New("user not found")
@@ -118,28 +118,30 @@ func (repository *userRepoImpl) GetUserByID(userId int) (*userDTO.UserResponse, 
 }
 
 func (repository *userRepoImpl) UserList() (*userDTO.UserListResponse, error) {
-	query := `SELECT id, name, email, password, created_at FROM users`
-	rows, err := repository.db.Query(query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+    query := `SELECT id, email, name, password FROM users`
+    rows, err := repository.db.Query(query)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
 
-	var users []userDTO.UserResponse
-	for rows.Next() {
-		user := userDTO.UserResponse{}
-		err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.CreatedAt)
-		if err != nil {
-			return nil, err
-		}
-		users = append(users, user)
-	}
+    var users []userDTO.UserResponse
+    for rows.Next() {
+        user := userDTO.UserResponse{}
+        err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Password)
+        if err != nil {
+            return nil, err
+        }
+        users = append(users, user)
+    }
 
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
+    if err = rows.Err(); err != nil {
+        return nil, err
+    }
 
-	return &userDTO.UserListResponse{Users: users}, nil
+    total := len(users)
+
+    return &userDTO.UserListResponse{Users: users, Total: total}, nil
 }
 
 func (repository *userRepoImpl) IsUserExist(userId int) (bool, error) {
