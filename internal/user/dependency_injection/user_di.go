@@ -1,4 +1,4 @@
-package dependencyinjection
+package dependency_injection
 
 import (
 	"database/sql"
