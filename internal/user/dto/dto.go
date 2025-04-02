@@ -8,7 +8,6 @@ type UserRegisterRequest struct {
 	Name      string    `json:"name" validate:"required"`
 	Email     string    `json:"email" validate:"required,email"`
 	Password  string    `json:"password" validate:"required,min=6"`
-	Role      string    `json:"role" validate:"required,oneof=admin user" default:"user"`
 	CreatedAt time.Time `json:"created_at" validate:"required"`
 }
 
@@ -29,12 +28,12 @@ type UserUpdateRequest struct {
 
 // Response
 type UserJWTResponse struct {
-	ID       int    `json:"id"`
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Token    string `json:"token"`
-	Role     string `json:"role"`
+	ID        int       `json:"id"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	Password  string    `json:"password"`
+	CreatedAt time.Time `json:"created_at"`
+	Token     string    `json:"token"`
 }
 
 type UserResponse struct {
@@ -42,8 +41,6 @@ type UserResponse struct {
 	Name      string    `json:"name"`
 	Email     string    `json:"email"`
 	CreatedAt time.Time `json:"created_at"`
-	Role      string    `json:"role"`
-	Token     string    `json:"token"`
 }
 
 type UserListResponse struct {

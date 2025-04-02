@@ -14,7 +14,6 @@ func TestUserModel(t *testing.T) {
             Email:     "admin@mail.com",
             Password:  "securepassword",
             CreatedAt: createdAt,
-            Role:      "admin",
         }
 
         if user.ID != 1 {
@@ -31,9 +30,6 @@ func TestUserModel(t *testing.T) {
         }
         if !user.CreatedAt.Equal(createdAt) {
             t.Errorf("expected CreatedAt to be %v, got %v", createdAt, user.CreatedAt)
-        }
-        if user.Role != "admin" {
-            t.Errorf("expected Role to be 'admin', got %s", user.Role)
         }
     })
 }
