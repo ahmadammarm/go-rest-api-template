@@ -118,9 +118,9 @@ func (handler *UserHandler) UserRouters(router fiber.Router) {
 	router.Get("/user/:id", handler.GetUserByID)
 }
 
-func NewUserHandler(userService userService.UserService) *UserHandler {
+func NewUserHandler(userService userService.UserService, validation *validator.Validate) *UserHandler {
 	return &UserHandler{
 		userService: userService,
-		validation:  validator.New(),
+		validation:  validation,
 	}
 }
