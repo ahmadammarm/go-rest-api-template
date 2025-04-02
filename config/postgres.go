@@ -4,37 +4,45 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"sync"
 	"time"
-
-	_ "github.com/lib/pq"
+    _ "github.com/lib/pq"
 )
 
-func PostgresConnect() (*sql.DB, error) {
-	host := os.Getenv("POSTGRES_HOST")
-	port := os.Getenv("POSTGRES_PORT")
-	user := os.Getenv("POSTGRES_USER")
-	password := os.Getenv("POSTGRES_PASSWORD")
-	dbname := os.Getenv("POSTGRES_DB")
+var (
+	databaseInstance *sql.DB
+	oncePostgres     sync.Once
+	initErr          error
+)
 
-	if host == "" || port == "" || user == "" || password == "" || dbname == "" {
-		return nil, fmt.Errorf("one or more required environment variables are missing")
-	}
+func PostgresInit() (*sql.DB, error) {
+	oncePostgres.Do(func() {
+		host := os.Getenv("POSTGRES_HOST")
+		port := os.Getenv("POSTGRES_PORT")
+		user := os.Getenv("POSTGRES_USER")
+		password := os.Getenv("POSTGRES_PASSWORD")
+		dbname := os.Getenv("POSTGRES_DB")
 
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+		dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 
-	databaseInstance, err := sql.Open("postgres", dsn)
-	if err != nil {
-		return nil, fmt.Errorf("error opening database: %v", err)
-	}
+		db, err := sql.Open("postgres", dsn)
+		if err != nil {
+			initErr = fmt.Errorf("error opening database: %v", err)
+			return
+		}
 
-	databaseInstance.SetMaxOpenConns(25)
-	databaseInstance.SetMaxIdleConns(25)
-	databaseInstance.SetConnMaxLifetime(5 * time.Minute)
+		db.SetMaxOpenConns(25)
+		db.SetMaxIdleConns(25)
+		db.SetConnMaxLifetime(5 * time.Minute)
 
-	if err = databaseInstance.Ping(); err != nil {
-		return nil, fmt.Errorf("error pinging database: %v", err)
-	}
+		if err = db.Ping(); err != nil {
+			initErr = fmt.Errorf("error pinging database: %v", err)
+			return
+		}
 
-	fmt.Println("Postgres connected")
-	return databaseInstance, nil
+		fmt.Println("Connected to Postgres")
+		databaseInstance = db
+	})
+
+	return databaseInstance, initErr
 }
