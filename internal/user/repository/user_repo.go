@@ -144,14 +144,14 @@ func (repository *userRepoImpl) UserList() (*userDTO.UserListResponse, error) {
     return &userDTO.UserListResponse{Users: users, Total: total}, nil
 }
 
-func (repository *userRepoImpl) IsUserExist(userId int) (bool, error) {
-	query := `SELECT COUNT(*) FROM users WHERE id = $1`
-	var count int
-	err := repository.db.QueryRow(query, userId).Scan(&count)
-	if err != nil {
-		return false, err
-	}
-	return count > 0, nil
+func (repo *userRepoImpl) IsUserExist(userId int) (bool, error) {
+    query := `SELECT COUNT(*) FROM users WHERE id = $1`
+    var count int
+    err := repo.db.QueryRow(query, userId).Scan(&count)
+    if err != nil {
+        return false, err
+    }
+    return count > 0, nil
 }
 
 func NewUserRepository(db *sql.DB) UserRepo {

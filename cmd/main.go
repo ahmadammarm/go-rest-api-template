@@ -6,6 +6,7 @@ import (
 
 	"github.com/ahmadammarm/go-rest-api-template/config"
 	users "github.com/ahmadammarm/go-rest-api-template/internal/user/dependency_injection"
+    news "github.com/ahmadammarm/go-rest-api-template/internal/news/dependency_injection"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
@@ -32,12 +33,13 @@ func main() {
     api := app.Group("/api/v1")
 
     users.InitializeUser(db, validator.New()).UserRouters(api)
+    news.InitializeNews(db, validator.New()).NewsRouters(api)
 
     if error := app.Listen(":8080"); error != nil {
         log.Printf("Failed to start server: %v", error)
         os.Exit(1)
     }
-    
+
     log.Println("Server started on port 8080")
 
 }

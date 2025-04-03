@@ -14,7 +14,6 @@ type NewsService interface {
     CreateNews(userID int, news *dto.NewsCreateRequest) error
     UpdateNews(userID int, news *dto.NewsUpdateRequest) error
     DeleteNews(userID int, id int) error
-    GetNewsByAuthorId(userID int, authorId int) (*dto.NewsByAuthorId, error)
 }
 
 type newsServiceImpl struct {
@@ -49,6 +48,7 @@ func (service *newsServiceImpl) GetAllNews(userID int) (*dto.NewsListResponse, e
 
     return &dto.NewsListResponse{
         News:  filteredNews,
+        Total: len(filteredNews),
     }, nil
 }
 
@@ -134,26 +134,6 @@ func (service *newsServiceImpl) DeleteNews(userID int, id int) error {
     }
 
     return nil
-}
-
-func (service *newsServiceImpl) GetNewsByAuthorId(userID int, authorId int) (*dto.NewsByAuthorId, error) {
-    userExists, err := service.userRepo.IsUserExist(userID)
-
-    if err != nil {
-        return nil, fmt.Errorf("error checking user existence: %w", err)
-    }
-
-    if !userExists {
-        return nil, fmt.Errorf("user with ID %d does not exist", userID)
-    }
-
-    news, err := service.newsRepo.GetNewsByAuthorId(authorId)
-
-    if err != nil {
-        return nil, fmt.Errorf("error getting news by author ID: %w", err)
-    }
-
-    return news, nil
 }
 
 func NewNewsService(newsRepo newsRepo.NewsRepository, userRepo userRepo.UserRepo) NewsService {

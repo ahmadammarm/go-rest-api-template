@@ -45,7 +45,7 @@ func (service *userServiceImpl) LoginUser(user *userDTO.UserLoginRequest) (*user
 		"exp":     jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
 	})
 
-	secretToken := os.Getenv("JWT_SECRET")
+	secretToken := os.Getenv("JWT_SECRET_KEY")
 
 	if secretToken == "" {
 		return nil, errors.New("JWT secret key not found")
