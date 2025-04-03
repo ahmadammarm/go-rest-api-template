@@ -12,7 +12,7 @@ import (
 
 type UserService interface {
 	RegisterUser(user *userDTO.UserRegisterRequest) error
-	LoginUser(user *userDTO.UserLoginRequest) (*userDTO.UserJWTResponse, error)
+	LoginUser(user *userDTO.UserLoginRequest) (string, error)
 	LogoutUser(user *userDTO.UserLogoutRequest) error
 	UpdateUser(user *userDTO.UserUpdateRequest, id int) error
 	GetUserByID(userId int) (*userDTO.UserResponse, error)
@@ -33,32 +33,29 @@ func (service *userServiceImpl) RegisterUser(user *userDTO.UserRegisterRequest) 
 	return service.userRepo.RegisterUser(user)
 }
 
-func (service *userServiceImpl) LoginUser(user *userDTO.UserLoginRequest) (*userDTO.UserJWTResponse, error) {
+func (service *userServiceImpl) LoginUser(user *userDTO.UserLoginRequest) (string, error) {
 	dbUser, err := service.userRepo.LoginUser(user)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"apps":    "go-rest-api-template",
 		"user_id": dbUser.ID,
-		"exp":     jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
+		"exp":     time.Now().Add(time.Hour * 24).Unix(),
 	})
 
 	secretToken := os.Getenv("JWT_SECRET_KEY")
-
 	if secretToken == "" {
-		return nil, errors.New("JWT secret key not found")
+		return "", errors.New("JWT_SECRET is not set in environment variables")
 	}
 
-	tokenString, err := token.SignedString([]byte(secretToken))
+	stringToken, err := token.SignedString([]byte(secretToken))
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	dbUser.Token = tokenString
-
-	return dbUser, nil
+	return stringToken, nil
 }
 
 func (service *userServiceImpl) LogoutUser(user *userDTO.UserLogoutRequest) error {

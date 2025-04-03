@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -18,26 +19,27 @@ func JWTAuth() fiber.Handler {
 	return func(context *fiber.Ctx) error {
 		stringToken := context.Get("Authorization")
 		if stringToken == "" {
-			return response.JSONResponse(context, 401, "Unauthorized", nil)
+			return response.JSONResponse(context, 401, "Unauthorized: No Token Provided", nil)
 		}
+
 
 		stringToken = strings.TrimPrefix(stringToken, "Bearer ")
 
 		token, err := jwt.ParseWithClaims(stringToken, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
-			secretKey := os.Getenv("JWT_SECRET_KEY")
-			if secretKey == "" {
-				return nil, response.JSONResponse(context, 500, "Internal Server Error", nil)
+			secret := os.Getenv("JWT_SECRET_KEY")
+			if secret == "" {
+				return nil, fmt.Errorf("JWT_SECRET is missing")
 			}
-			return []byte(secretKey), nil
+			return []byte(secret), nil
 		})
 
 		if err != nil || !token.Valid {
-			return response.JSONResponse(context, 401, "Unauthorized", nil)
+			return response.JSONResponse(context, 401, "Unauthorized: Invalid Token", nil)
 		}
 
 		claims, ok := token.Claims.(*JWTClaims)
 		if !ok {
-			return response.JSONResponse(context, 401, "Unauthorized", nil)
+			return response.JSONResponse(context, 401, "Unauthorized: Token Claims Invalid", nil)
 		}
 
 		context.Locals("user_id", claims.UserID)

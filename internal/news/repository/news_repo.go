@@ -32,25 +32,25 @@ func (repo *newsRepository) GetAllNews() (*dto.NewsListResponse, error) {
 
 	defer rows.Close()
 
-	newsList := &dto.NewsListResponse{}
+	var news []dto.NewsResponse
 
-	for rows.Next() {
-		news := dto.NewsResponse{}
-		err := rows.Scan(&news.ID, &news.Title, &news.Content, &news.AuthorId, &news.CreatedAt, &news.UpdatedAt)
+    for rows.Next() {
+        var n dto.NewsResponse
+        err := rows.Scan(&n.ID, &n.Title, &n.Content, &n.AuthorId, &n.CreatedAt, &n.UpdatedAt)
+        if err != nil {
+            return nil, err
+        }
+        news = append(news, n)
+    }
+    if err := rows.Err(); err != nil {
+        return nil, err
+    }
 
-		if err != nil {
-			return nil, err
-		}
-
-		newsList.News = append(newsList.News, news)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
+    total := len(news)
 
     return &dto.NewsListResponse{
-        News:  newsList.News,
+        News:  news,
+        Total: total,
     }, nil
 }
 
