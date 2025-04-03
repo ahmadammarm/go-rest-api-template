@@ -12,7 +12,7 @@ type NewsService interface {
 	GetAllNews(userID int) (*dto.NewsListResponse, error)
     GetNewsByID(userID int, id int) (*dto.NewsResponse, error)
     CreateNews(userID int, news *dto.NewsCreateRequest) error
-    UpdateNews(userID int, news *dto.NewsUpdateRequest) error
+    UpdateNews(userID int, newsId int, news dto.NewsUpdateRequest) error
     DeleteNews(userID int, id int) error
 }
 
@@ -94,7 +94,7 @@ func (service *newsServiceImpl) CreateNews(userID int, news *dto.NewsCreateReque
     return nil
 }
 
-func (service *newsServiceImpl) UpdateNews(userID int, news *dto.NewsUpdateRequest) error {
+func (service *newsServiceImpl) UpdateNews(userID int, newsId int, news dto.NewsUpdateRequest) error {
     userExists, err := service.userRepo.IsUserExist(userID)
 
     if err != nil {
@@ -107,7 +107,7 @@ func (service *newsServiceImpl) UpdateNews(userID int, news *dto.NewsUpdateReque
 
     news.AuthorId = userID
 
-    err = service.newsRepo.UpdateNews(news)
+    err = service.newsRepo.UpdateNews(newsId, news)
 
     if err != nil {
         return fmt.Errorf("error updating news: %w", err)

@@ -13,7 +13,7 @@ type NewsRepository interface {
 	GetAllNews() (*dto.NewsListResponse, error)
 	GetNewsById(id int) (*dto.NewsResponse, error)
 	CreateNews(news *dto.NewsCreateRequest) error
-	UpdateNews(news *dto.NewsUpdateRequest) error
+	UpdateNews(id int, news dto.NewsUpdateRequest) error
 	DeleteNews(id int) error
 }
 
@@ -22,7 +22,9 @@ type newsRepository struct {
 }
 
 func (repo *newsRepository) GetAllNews() (*dto.NewsListResponse, error) {
-	query := `SELECT id, title, content, user_id, created_at, updated_at FROM news`
+	query := `SELECT n.id, n.title, n.content, n.user_id, u.name AS author_name, n.created_at, n.updated_at
+              FROM news n
+              JOIN users u ON n.user_id = u.id`
 
 	rows, err := repo.db.Query(query)
 
@@ -34,38 +36,52 @@ func (repo *newsRepository) GetAllNews() (*dto.NewsListResponse, error) {
 
 	var news []dto.NewsResponse
 
-    for rows.Next() {
-        var n dto.NewsResponse
-        err := rows.Scan(&n.ID, &n.Title, &n.Content, &n.AuthorId, &n.CreatedAt, &n.UpdatedAt)
-        if err != nil {
-            return nil, err
-        }
-        news = append(news, n)
-    }
-    if err := rows.Err(); err != nil {
-        return nil, err
-    }
+	for rows.Next() {
+		var n dto.NewsResponse
+		err := rows.Scan(&n.ID, &n.Title, &n.Content, &n.AuthorId, &n.AuthorName, &n.CreatedAt, &n.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		news = append(news, n)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
-    total := len(news)
+	total := len(news)
 
-    return &dto.NewsListResponse{
-        News:  news,
-        Total: total,
-    }, nil
+	return &dto.NewsListResponse{
+		News:  news,
+		Total: total,
+	}, nil
 }
 
 func (repo *newsRepository) GetNewsById(id int) (*dto.NewsResponse, error) {
-	query := "SELECT * FROM news WHERE id = $1"
-	news := &dto.NewsResponse{}
+	query := `SELECT n.id, n.title, n.content, n.user_id, u.name AS author_name, n.created_at, n.updated_at
+              FROM news n
+              JOIN users u ON n.user_id = u.id WHERE n.id = $1`
 
-	err := repo.db.QueryRow(query, id).Scan(&news.ID, &news.Title, &news.Content, &news.AuthorId, &news.CreatedAt, &news.UpdatedAt)
+	rows, err := repo.db.Query(query, id)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, errors.New("news not found")
-		}
+		return nil, err
 	}
-	return news, nil
+
+	defer rows.Close()
+
+	var n dto.NewsResponse
+	if rows.Next() {
+		err := rows.Scan(&n.ID, &n.Title, &n.Content, &n.AuthorId, &n.AuthorName, &n.CreatedAt, &n.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		return &n, nil
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return nil, errors.New("news not found")
 }
 
 func (repo *newsRepository) CreateNews(news *dto.NewsCreateRequest) error {
@@ -83,16 +99,18 @@ func (repo *newsRepository) CreateNews(news *dto.NewsCreateRequest) error {
 
 }
 
-func (repo *newsRepository) UpdateNews(news *dto.NewsUpdateRequest) error {
-	query := "UPDATE news SET title = $1, content = $2, user_id = $3, updated_at = $4 WHERE id = $5"
+func (repo *newsRepository) UpdateNews(id int, news dto.NewsUpdateRequest) error {
+    query := "UPDATE news SET title = $1, content = $2, user_id = $3, updated_at = $4 WHERE id = $5"
 
-	news.UpdatedAt = strconv.FormatInt(time.Now().Unix(), 10)
+    updatedAt := time.Now()
 
-	_, err := repo.db.Exec(query, news.Title, news.Content, news.AuthorId, news.UpdatedAt, news.ID)
-	if err != nil {
-		return err
-	}
-	return nil
+    _, err := repo.db.Exec(query, news.Title, news.Content, news.AuthorId, updatedAt, id)
+
+    if err != nil {
+        return err
+    }
+
+    return nil
 }
 
 func (repo *newsRepository) DeleteNews(id int) error {

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"strconv"
 
 	"github.com/ahmadammarm/go-rest-api-template/helper/response"
@@ -44,12 +45,12 @@ func (handler *NewsHandler) GetNewsByID(context *fiber.Ctx) error {
 
     news, err := handler.newsService.GetNewsByID(userId, newsId)
 
-    if err != nil {
-        return response.JSONResponse(context, 500, "Internal Server Error", nil)
-    }
 
-    if news == nil {
-        return response.JSONResponse(context, 404, "Not Found", nil)
+    if err != nil {
+        if err.Error() == "news not found" {
+            return response.JSONResponse(context, 404, "Not Found", nil)
+        }
+        return response.JSONResponse(context, 500, "Internal Server Error", nil)
     }
 
     return response.JSONResponse(context, 200, "Success", news)
@@ -85,6 +86,11 @@ func (handler *NewsHandler) UpdateNews(context *fiber.Ctx) error {
         return response.JSONResponse(context, 401, "Unauthorized", nil)
     }
 
+    id, err := strconv.Atoi(context.Params("id"))
+    if err != nil {
+        return response.JSONResponse(context, 400, "Bad Request", nil)
+    }
+
     var news dto.NewsUpdateRequest
     if err := context.BodyParser(&news); err != nil {
         return response.JSONResponse(context, 400, "Bad Request", nil)
@@ -96,13 +102,11 @@ func (handler *NewsHandler) UpdateNews(context *fiber.Ctx) error {
 
     news.AuthorId = userId
 
-    _, err := strconv.Atoi(context.Params("id"))
-
-    if err != nil {
-        return response.JSONResponse(context, 400, "Bad Request", nil)
-    }
-
-    if err := handler.newsService.UpdateNews(userId, &news); err != nil {
+    if err := handler.newsService.UpdateNews(userId, id, news); err != nil {
+        log.Println("Error updating news:", err)
+        if err.Error() == "news not found" {
+            return response.JSONResponse(context, 404, "Not Found", nil)
+        }
         return response.JSONResponse(context, 500, "Internal Server Error", nil)
     }
 
