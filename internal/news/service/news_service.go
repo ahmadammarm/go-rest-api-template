@@ -52,3 +52,113 @@ func (service *newsServiceImpl) GetAllNews(userID int) (*dto.NewsListResponse, e
     }, nil
 }
 
+func (service *newsServiceImpl) GetNewsByID(userID int, id int) (*dto.NewsResponse, error) {
+    userExists, err := service.userRepo.IsUserExist(userID)
+
+    if err != nil {
+        return nil, fmt.Errorf("error checking user existence: %w", err)
+    }
+
+    if !userExists {
+        return nil, fmt.Errorf("user with ID %d does not exist", userID)
+    }
+
+    news, err := service.newsRepo.GetNewsById(id)
+
+    if err != nil {
+        return nil, fmt.Errorf("error getting news: %w", err)
+    }
+
+    return news, nil
+}
+
+func (service *newsServiceImpl) CreateNews(userID int, news *dto.NewsCreateRequest) error {
+    userExists, err := service.userRepo.IsUserExist(userID)
+
+    if err != nil {
+        return fmt.Errorf("error checking user existence: %w", err)
+    }
+
+    if !userExists {
+        return fmt.Errorf("user with ID %d does not exist", userID)
+    }
+
+    news.AuthorId = userID
+
+    err = service.newsRepo.CreateNews(news)
+
+    if err != nil {
+        return fmt.Errorf("error creating news: %w", err)
+    }
+
+    return nil
+}
+
+func (service *newsServiceImpl) UpdateNews(userID int, news *dto.NewsUpdateRequest) error {
+    userExists, err := service.userRepo.IsUserExist(userID)
+
+    if err != nil {
+        return fmt.Errorf("error checking user existence: %w", err)
+    }
+
+    if !userExists {
+        return fmt.Errorf("user with ID %d does not exist", userID)
+    }
+
+    news.AuthorId = userID
+
+    err = service.newsRepo.UpdateNews(news)
+
+    if err != nil {
+        return fmt.Errorf("error updating news: %w", err)
+    }
+
+    return nil
+}
+
+func (service *newsServiceImpl) DeleteNews(userID int, id int) error {
+    userExists, err := service.userRepo.IsUserExist(userID)
+
+    if err != nil {
+        return fmt.Errorf("error checking user existence: %w", err)
+    }
+
+    if !userExists {
+        return fmt.Errorf("user with ID %d does not exist", userID)
+    }
+
+    err = service.newsRepo.DeleteNews(id)
+
+    if err != nil {
+        return fmt.Errorf("error deleting news: %w", err)
+    }
+
+    return nil
+}
+
+func (service *newsServiceImpl) GetNewsByAuthorId(userID int, authorId int) (*dto.NewsByAuthorId, error) {
+    userExists, err := service.userRepo.IsUserExist(userID)
+
+    if err != nil {
+        return nil, fmt.Errorf("error checking user existence: %w", err)
+    }
+
+    if !userExists {
+        return nil, fmt.Errorf("user with ID %d does not exist", userID)
+    }
+
+    news, err := service.newsRepo.GetNewsByAuthorId(authorId)
+
+    if err != nil {
+        return nil, fmt.Errorf("error getting news by author ID: %w", err)
+    }
+
+    return news, nil
+}
+
+func NewNewsService(newsRepo newsRepo.NewsRepository, userRepo userRepo.UserRepo) NewsService {
+    return &newsServiceImpl{
+        newsRepo: newsRepo,
+        userRepo: userRepo,
+    }
+}
