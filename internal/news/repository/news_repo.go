@@ -23,28 +23,37 @@ type newsRepository struct {
 }
 
 func (repo *newsRepository) GetAllNews() (*dto.NewsListResponse, error) {
-	rows, err := repo.db.Query("SELECT * FROM news")
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+	query := `SELECT news.id, news.title, news.content, news.user_id, users.name AS author_name, news.created_at, news.updated_at
+        FROM news
+        JOIN users ON news.user_id = users.id`
 
-	var news []dto.NewsResponse
-	for rows.Next() {
-		var n dto.NewsResponse
-		if err := rows.Scan(&n.ID, &n.Title, &n.Content, &n.AuthorId, &n.CreatedAt, &n.UpdatedAt); err != nil {
-			return nil, err
-		}
-		news = append(news, n)
-	}
+    rows, err := repo.db.Query(query)
 
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
+    if err != nil {
+        return nil, err
+    }
 
-	return &dto.NewsListResponse{
-		News: news,
-	}, nil
+    defer rows.Close()
+
+    newsList := &dto.NewsListResponse{}
+
+    for rows.Next() {
+        news := dto.NewsResponse{}
+        err := rows.Scan(&news.ID, &news.Title, &news.Content, &news.AuthorId, &news.AuthorId, &news.CreatedAt, &news.UpdatedAt)
+
+        if err != nil {
+            return nil, err
+        }
+
+        newsList.News = append(newsList.News, news)
+    }
+
+    if err := rows.Err(); err != nil {
+        return nil, err
+    }
+
+    newsList.Total = len(newsList.News)
+    return newsList, nil
 }
 
 func (repo *newsRepository) GetNewsById(id int) (*dto.NewsResponse, error) {
