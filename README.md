@@ -75,3 +75,5 @@ The project will be available at:
 
 `http://localhost:8080`
 
+### This project also available for your contributions, thank you :)
+
