@@ -68,7 +68,7 @@ cp .env.example .env
 5. Run the project:
 
 ```sh
-go run main.go
+go run cmd/main.go
 ```
 
 The project will be available at:
