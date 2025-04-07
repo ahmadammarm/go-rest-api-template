@@ -71,6 +71,26 @@ cp .env.example .env
 go run cmd/main.go
 ```
 
+
+## Getting Started with Docker
+
+1. Clone the repository:
+```sh
+git clone https://github.com/ahmadammarm/go-rest-api-template.git
+```
+
+2. Navigate to the project directory:
+
+```sh
+cd go-rest-api-template
+```
+
+3. Run the Docker Compose:
+
+```sh
+docker-compose up
+```
+
 The project will be available at:
 
 `http://localhost:8080`
