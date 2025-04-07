@@ -91,6 +91,16 @@ cd go-rest-api-template
 docker-compose up
 ```
 
+or run in detach mode:
+```sh
+docker-compose up -d
+```
+
+4. To stop the Docker Compose:
+```sh
+docker-compose down
+```
+
 The project will be available at:
 
 `http://localhost:8080`
