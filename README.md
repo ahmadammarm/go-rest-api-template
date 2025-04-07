@@ -58,11 +58,10 @@ cd go-rest-api-template
 go mod download
 ```
 
-4. Configure database connection in database/connect.go:
+4. Configure Environment Variable: Copy the file `.env.example` to `.env` and adjust it to your configuration:
 
-Configure Environment Variable: Copy the file `.env.example` to `.env` and adjust it to your configuration:
 ```sh
-cp example.env .env
+cp .env.example .env
 ```
 
 
