@@ -31,10 +31,14 @@ func (repository *userRepoImpl) RegisterUser(user *userDTO.UserRegisterRequest) 
 
 	defer func() {
 		if pan := recover(); pan != nil {
-			tx.Rollback()
+			if rollbackErr := tx.Rollback(); rollbackErr != nil {
+				panic(rollbackErr)
+			}
 			panic(pan)
 		} else if err != nil {
-			tx.Rollback()
+			if rollbackErr := tx.Rollback(); rollbackErr != nil {
+				panic(rollbackErr)
+			}
 		} else {
 			err = tx.Commit()
 		}
@@ -118,40 +122,40 @@ func (repository *userRepoImpl) GetUserByID(userId int) (*userDTO.UserResponse, 
 }
 
 func (repository *userRepoImpl) UserList() (*userDTO.UserListResponse, error) {
-    query := `SELECT id, email, name, password FROM users`
-    rows, err := repository.db.Query(query)
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
+	query := `SELECT id, email, name, password FROM users`
+	rows, err := repository.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
-    var users []userDTO.UserResponse
-    for rows.Next() {
-        user := userDTO.UserResponse{}
-        err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Password)
-        if err != nil {
-            return nil, err
-        }
-        users = append(users, user)
-    }
+	var users []userDTO.UserResponse
+	for rows.Next() {
+		user := userDTO.UserResponse{}
+		err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Password)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
 
-    if err = rows.Err(); err != nil {
-        return nil, err
-    }
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
 
-    total := len(users)
+	total := len(users)
 
-    return &userDTO.UserListResponse{Users: users, Total: total}, nil
+	return &userDTO.UserListResponse{Users: users, Total: total}, nil
 }
 
 func (repository *userRepoImpl) IsUserExist(userId int) (bool, error) {
-    query := `SELECT COUNT(*) FROM users WHERE id = $1`
-    var count int
-    err := repository.db.QueryRow(query, userId).Scan(&count)
-    if err != nil {
-        return false, err
-    }
-    return count > 0, nil
+	query := `SELECT COUNT(*) FROM users WHERE id = $1`
+	var count int
+	err := repository.db.QueryRow(query, userId).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
 func NewUserRepository(db *sql.DB) UserRepo {
