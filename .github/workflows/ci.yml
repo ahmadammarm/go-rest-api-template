@@ -18,7 +18,7 @@ jobs:
         go-version: '1.24'
 
     - name: Build Go Project
-      run: go build -v ./...
+        run: go build -v ./...
 
     - name: Install golangci-lint for Linting
         run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
@@ -27,6 +27,6 @@ jobs:
         run: golangci-lint run ./...
 
     - name: Test Go Project
-      run: go test -v ./...
+        run: go test -v ./...
 
 
