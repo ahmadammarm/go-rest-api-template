@@ -20,7 +20,7 @@ type NewsHandler struct {
 func (handler *NewsHandler) GetAllNews(context *fiber.Ctx) error {
     userId, ok := context.Locals("user_id").(int)
     if !ok {
-        return response.JSONResponse(context, 401, "Unauthorized", nil)
+        return response.JSONResponse(context, 401, "Unauthorized: No Token Provided", nil)
     }
 
     news, err := handler.newsService.GetAllNews(userId)
@@ -35,7 +35,7 @@ func (handler *NewsHandler) GetNewsByID(context *fiber.Ctx) error {
     userId, ok := context.Locals("user_id").(int)
 
     if !ok {
-        return response.JSONResponse(context, 401, "Unauthorized", nil)
+        return response.JSONResponse(context, 401, "Unauthorized: No Token Provided", nil)
     }
 
     newsId, err := strconv.Atoi(context.Params("id"))
@@ -59,7 +59,7 @@ func (handler *NewsHandler) GetNewsByID(context *fiber.Ctx) error {
 func (handler *NewsHandler) CreateNews(context *fiber.Ctx) error {
     userId, ok := context.Locals("user_id").(int)
     if !ok {
-        return response.JSONResponse(context, 401, "Unauthorized", nil)
+        return response.JSONResponse(context, 401, "Unauthorized: No Token Provided", nil)
     }
 
     var news dto.NewsCreateRequest
@@ -83,7 +83,7 @@ func (handler *NewsHandler) CreateNews(context *fiber.Ctx) error {
 func (handler *NewsHandler) UpdateNews(context *fiber.Ctx) error {
     userId, ok := context.Locals("user_id").(int)
     if !ok {
-        return response.JSONResponse(context, 401, "Unauthorized", nil)
+        return response.JSONResponse(context, 401, "Unauthorized: No Token Provided", nil)
     }
 
     id, err := strconv.Atoi(context.Params("id"))
@@ -116,7 +116,7 @@ func (handler *NewsHandler) UpdateNews(context *fiber.Ctx) error {
 func (handler *NewsHandler) DeleteNews(context *fiber.Ctx) error {
     userId, ok := context.Locals("user_id").(int)
     if !ok {
-        return response.JSONResponse(context, 401, "Unauthorized", nil)
+        return response.JSONResponse(context, 401, "Unauthorized: No Token Provided", nil)
     }
 
     id, err := strconv.Atoi(context.Params("id"))
