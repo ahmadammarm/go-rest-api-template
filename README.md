@@ -15,7 +15,7 @@ A RESTful API template built with Go programming language.
 - **Service Layer**: Implement the service layer for separating business logic from application logic.
 - **Repository Pattern**: Managing interactions with databases using the repository pattern.
 - **CRUD Implementation**: Implement CRUD logic in the model entity.
-- **Configuration**: Supports database environment configuration via .env files.
+- **Configuration**: Supports environment variables configuration via .env files.
 - **Deployment**: Supports build and deploy using Docker.
 
 ## REST API Design
