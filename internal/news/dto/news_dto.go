@@ -29,13 +29,6 @@ type NewsResponse struct {
 	UpdatedAt  string `json:"updated_at"`
 }
 
-type NewsByAuthorId struct {
-	ID       int    `json:"id"`
-	Title    string `json:"title"`
-	Content  string `json:"content"`
-	AuthorId int    `json:"user_id"`
-}
-
 type NewsListResponse struct {
 	News  []NewsResponse `json:"news"`
 	Total int            `json:"total"`
