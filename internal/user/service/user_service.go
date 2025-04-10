@@ -13,7 +13,6 @@ import (
 type UserService interface {
 	RegisterUser(user *userDTO.UserRegisterRequest) error
 	LoginUser(user *userDTO.UserLoginRequest) (string, error)
-	LogoutUser(user *userDTO.UserLogoutRequest) error
 	UpdateUser(user *userDTO.UserUpdateRequest, id int) error
 	GetUserByID(userId int) (*userDTO.UserResponse, error)
 	UserList() (*userDTO.UserListResponse, error)
@@ -56,10 +55,6 @@ func (service *userServiceImpl) LoginUser(user *userDTO.UserLoginRequest) (strin
 	}
 
 	return stringToken, nil
-}
-
-func (service *userServiceImpl) LogoutUser(user *userDTO.UserLogoutRequest) error {
-	return service.userRepo.LogoutUser(user)
 }
 
 func (service *userServiceImpl) UpdateUser(user *userDTO.UserUpdateRequest, id int) error {

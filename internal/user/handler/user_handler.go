@@ -51,20 +51,6 @@ func (handler *UserHandler) LoginUser(context *fiber.Ctx) error {
 	return response.JSONResponse(context, 200, "Login User Success", token)
 }
 
-func (handler *UserHandler) LogoutUser(context *fiber.Ctx) error {
-	logoutRequest := new(dto.UserLogoutRequest)
-
-	if err := context.BodyParser(logoutRequest); err != nil {
-		return response.JSONResponse(context, 400, "Invalid Request", nil)
-	}
-
-	if err := handler.userService.LogoutUser(logoutRequest); err != nil {
-		return response.JSONResponse(context, 401, "Logout User Failed", nil)
-	}
-
-	return response.JSONResponse(context, 200, "Logout User Success", nil)
-}
-
 func (handler *UserHandler) UpdateUser(context *fiber.Ctx) error {
 	user := new(dto.UserUpdateRequest)
 	if err := context.BodyParser(user); err != nil {
@@ -113,7 +99,6 @@ func (handler *UserHandler) UserList(context *fiber.Ctx) error {
 func (handler *UserHandler) UserRouters(router fiber.Router) {
 	router.Post("/user/register", handler.RegisterUser)
 	router.Post("/user/login", handler.LoginUser)
-	router.Post("/user/logout", handler.LogoutUser)
 	router.Get("/users", handler.UserList)
 	router.Get("/user/:id", handler.GetUserByID)
 }
