@@ -128,3 +128,190 @@ func TestGetAllNews(t *testing.T) {
 		mockRepo.AssertExpectations(t)
 	})
 }
+
+func TestGetNewsByID(t *testing.T) {
+	mockRepo := new(MockNewsRepository)
+	newsService := service.NewNewsService(mockRepo)
+
+	t.Run("success", func(t *testing.T) {
+		newsID := 1
+		expectedNews := &dto.NewsResponse{
+			ID:         int(newsID),
+			Title:      "Test News",
+			Content:    "Test Content",
+			AuthorId:   1,
+			AuthorName: "Author 1",
+			CreatedAt:  "2023-01-01T00:00:00Z",
+			UpdatedAt:  "2023-01-01T00:00:00Z",
+		}
+
+		mockRepo.On("GetNewsById", newsID).Return(expectedNews, nil).Once()
+
+		result, err := newsService.GetNewsByID(newsID)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Equal(t, expectedNews, result)
+
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("news not found", func(t *testing.T) {
+		newsID := 999
+		notFoundErr := errors.New("news not found")
+
+		mockRepo.On("GetNewsById", newsID).Return(nil, notFoundErr).Once()
+
+		result, err := newsService.GetNewsByID(newsID)
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		assert.Contains(t, err.Error(), "error getting news by ID")
+
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("database error", func(t *testing.T) {
+		newsID := 1
+		dbErr := errors.New("database connection error")
+
+		mockRepo.On("GetNewsById", newsID).Return(nil, dbErr).Once()
+
+		result, err := newsService.GetNewsByID(newsID)
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		assert.Contains(t, err.Error(), "error getting news by ID")
+
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("nil news with no error", func(t *testing.T) {
+
+		newsID := 1
+
+		mockRepo.On("GetNewsById", newsID).Return(nil, nil).Once()
+
+		result, err := newsService.GetNewsByID(newsID)
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		assert.Contains(t, err.Error(), "not found")
+
+		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestCreateNews(t *testing.T) {
+    mockRepo := new(MockNewsRepository)
+    newsService := service.NewNewsService(mockRepo)
+
+    t.Run("success", func(t *testing.T) {
+        newsRequest := &dto.NewsCreateRequest{
+            Title:   "New News",
+            Content: "New Content",
+            AuthorId: 1,
+        }
+
+        mockRepo.On("CreateNews", newsRequest).Return(nil).Once()
+
+        err := newsService.CreateNews(newsRequest)
+
+        assert.NoError(t, err)
+
+        mockRepo.AssertExpectations(t)
+    })
+
+    t.Run("repository returns error", func(t *testing.T) {
+        newsRequest := &dto.NewsCreateRequest{
+            Title:   "New News",
+            Content: "New Content",
+            AuthorId: 1,
+        }
+        expectedError := errors.New("database error")
+
+        mockRepo.On("CreateNews", newsRequest).Return(expectedError).Once()
+
+        err := newsService.CreateNews(newsRequest)
+
+        assert.Error(t, err)
+        assert.Contains(t, err.Error(), "error creating news")
+
+        mockRepo.AssertExpectations(t)
+    })
+}
+
+func TestUpdateNews(t *testing.T) {
+    mockRepo := new(MockNewsRepository)
+    newsService := service.NewNewsService(mockRepo)
+
+    t.Run("success", func(t *testing.T) {
+        newsID := 1
+        newsUpdateRequest := dto.NewsUpdateRequest{
+            ID:       newsID,
+            Title:    "Updated Title",
+            Content:  "Updated Content",
+            AuthorId: 1,
+        }
+
+        mockRepo.On("UpdateNews", newsID, newsUpdateRequest).Return(nil).Once()
+
+        err := newsService.UpdateNews(newsID, newsUpdateRequest)
+
+        assert.NoError(t, err)
+
+        mockRepo.AssertExpectations(t)
+    })
+
+    t.Run("repository returns error", func(t *testing.T) {
+        newsID := 1
+        newsUpdateRequest := dto.NewsUpdateRequest{
+            ID:       newsID,
+            Title:    "Updated Title",
+            Content:  "Updated Content",
+            AuthorId: 1,
+        }
+        expectedError := errors.New("database error")
+
+        mockRepo.On("UpdateNews", newsID, newsUpdateRequest).Return(expectedError).Once()
+
+        err := newsService.UpdateNews(newsID, newsUpdateRequest)
+
+        assert.Error(t, err)
+        assert.Contains(t, err.Error(), "error updating news")
+
+        mockRepo.AssertExpectations(t)
+    })
+}
+
+func TestDeleteNews(t *testing.T) {
+    mockRepo := new(MockNewsRepository)
+    newsService := service.NewNewsService(mockRepo)
+
+    t.Run("success", func(t *testing.T) {
+        newsID := 3
+
+        mockRepo.On("DeleteNews", newsID).Return(nil).Once()
+
+        err := newsService.DeleteNews(newsID)
+
+        assert.NoError(t, err)
+
+        mockRepo.AssertExpectations(t)
+    })
+
+    t.Run("repository returns error", func(t *testing.T) {
+        newsID := 3
+        expectedError := errors.New("database error")
+
+        mockRepo.On("DeleteNews", newsID).Return(expectedError).Once()
+
+        err := newsService.DeleteNews(newsID)
+
+        assert.Error(t, err)
+        assert.Contains(t, err.Error(), "error deleting news")
+
+        mockRepo.AssertExpectations(t)
+    })
+}
+
