@@ -11,7 +11,6 @@ import (
 type UserRepo interface {
 	RegisterUser(user *userDTO.UserRegisterRequest) error
 	LoginUser(user *userDTO.UserLoginRequest) (*userDTO.UserJWTResponse, error)
-	LogoutUser(user *userDTO.UserLogoutRequest) error
 	UpdateUser(user *userDTO.UserUpdateRequest, id int) error
 	GetUserByID(userId int) (*userDTO.UserResponse, error)
 	UserList() (*userDTO.UserListResponse, error)
@@ -84,10 +83,6 @@ func (repository *userRepoImpl) LoginUser(user *userDTO.UserLoginRequest) (*user
 
 }
 
-func (repository *userRepoImpl) LogoutUser(user *userDTO.UserLogoutRequest) error {
-	return nil
-}
-
 func (repository *userRepoImpl) UpdateUser(user *userDTO.UserUpdateRequest, id int) error {
 	query := `UPDATE users SET name = $1, email = $2, password = $3 WHERE id = $4`
 
@@ -131,7 +126,7 @@ func (repository *userRepoImpl) UserList() (*userDTO.UserListResponse, error) {
 	var users []userDTO.UserResponse
 	for rows.Next() {
 		user := userDTO.UserResponse{}
-		err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Password)
+		err := rows.Scan(&user.ID, &user.Email, &user.Name, &user.Password)
 		if err != nil {
 			return nil, err
 		}

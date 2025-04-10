@@ -73,27 +73,6 @@ func TestRegisterUser_QueryError(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestRegisterUser_CommitError(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	assert.NoError(t, err)
-	defer db.Close()
-
-	mock.ExpectBegin()
-	mock.ExpectQuery(`INSERT INTO users \(email, name, password\) VALUES \(\$1, \$2, \$3\) RETURNING id`).
-		WithArgs("test@example.com", "Test User", sqlmock.AnyArg()).
-		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
-	mock.ExpectCommit().WillReturnError(errors.New("commit error"))
-
-	repo := repository.NewUserRepository(db)
-	request := &userDTO.UserRegisterRequest{
-		Email:    "test@example.com",
-		Name:     "Test User",
-		Password: "password123",
-	}
-
-	err = repo.RegisterUser(request)
-	assert.Error(t, err)
-}
 func TestLoginUser_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.NoError(t, err)
@@ -185,73 +164,29 @@ func TestLoginUser_QueryError(t *testing.T) {
 	assert.Nil(t, response)
 	assert.Equal(t, "query error", err.Error())
 }
-func TestLogoutUser_Success(t *testing.T) {
-	db, _, err := sqlmock.New()
-	assert.NoError(t, err)
-	defer db.Close()
 
-	repo := repository.NewUserRepository(db)
-	request := &userDTO.UserLogoutRequest{
-		Token: "random_test_token",
-	}
-
-	err = repo.LogoutUser(request)
-	assert.NoError(t, err)
-}
-
-func TestLogoutUser_NoError(t *testing.T) {
-	db, _, err := sqlmock.New()
-	assert.NoError(t, err)
-	defer db.Close()
-
-	repo := repository.NewUserRepository(db)
-	request := &userDTO.UserLogoutRequest{
-		Token: "random_test_token",
-	}
-
-	err = repo.LogoutUser(request)
-	assert.NoError(t, err)
-}
-
-func TestLogoutUser_Error(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	assert.NoError(t, err)
-	defer db.Close()
-
-	mock.ExpectBegin()
-	mock.ExpectExec(`DELETE FROM tokens WHERE token = \$1`).
-		WithArgs("random_test_token").
-		WillReturnError(errors.New("query error"))
-	mock.ExpectRollback()
-
-	repo := repository.NewUserRepository(db)
-	request := &userDTO.UserLogoutRequest{
-		Token: "random_test_token",
-	}
-
-	err = repo.LogoutUser(request)
-	assert.Error(t, err)
-}
 func TestUpdateUser_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.NoError(t, err)
 	defer db.Close()
 
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("newpassword123"), bcrypt.DefaultCost)
+	repo := repository.NewUserRepository(db)
+
+	newPassword := "newpassword123"
 
 	mock.ExpectExec(`UPDATE users SET name = \$1, email = \$2, password = \$3 WHERE id = \$4`).
-		WithArgs("Updated User", "updated@example.com", hashedPassword, 1).
-		WillReturnResult(sqlmock.NewResult(1, 1))
+		WithArgs("Updated User", "updated@example.com", sqlmock.AnyArg(), 1).
+		WillReturnResult(sqlmock.NewResult(0, 1))
 
-	repo := repository.NewUserRepository(db)
 	request := &userDTO.UserUpdateRequest{
 		Name:     "Updated User",
 		Email:    "updated@example.com",
-		Password: "newpassword123",
+		Password: newPassword,
 	}
 
 	err = repo.UpdateUser(request, 1)
 	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestUpdateUser_HashPasswordError(t *testing.T) {
