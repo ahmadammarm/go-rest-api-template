@@ -11,6 +11,7 @@ A RESTful API template built with Go programming language.
 
 ## Features
 
+- **Unit Testing**: Implement the unit testing in order to code maintenance.
 - **Middleware**: Implement the JWT Auth for the middleware.
 - **Service Layer**: Implement the service layer for separating business logic from application logic.
 - **Repository Pattern**: Managing interactions with databases using the repository pattern.
