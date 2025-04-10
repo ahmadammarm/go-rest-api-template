@@ -15,7 +15,6 @@ type UserRepo interface {
 	UpdateUser(user *userDTO.UserUpdateRequest, id int) error
 	GetUserByID(userId int) (*userDTO.UserResponse, error)
 	UserList() (*userDTO.UserListResponse, error)
-	IsUserExist(userId int) (bool, error)
 }
 
 type userRepoImpl struct {

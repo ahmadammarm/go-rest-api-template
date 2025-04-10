@@ -2,143 +2,105 @@ package service
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/ahmadammarm/go-rest-api-template/internal/news/dto"
 	newsRepo "github.com/ahmadammarm/go-rest-api-template/internal/news/repository"
-	userRepo "github.com/ahmadammarm/go-rest-api-template/internal/user/repository"
 )
 
 type NewsService interface {
-	GetAllNews(userID int) (*dto.NewsListResponse, error)
-    GetNewsByID(userID int, id int) (*dto.NewsResponse, error)
-    CreateNews(userID int, news *dto.NewsCreateRequest) error
-    UpdateNews(userID int, newsId int, news dto.NewsUpdateRequest) error
-    DeleteNews(userID int, id int) error
+	GetAllNews() (*dto.NewsListResponse, error)
+	GetNewsByID(id int) (*dto.NewsResponse, error)
+	CreateNews(news *dto.NewsCreateRequest) error
+	UpdateNews(newsId int, news dto.NewsUpdateRequest) error
+	DeleteNews(id int) error
 }
 
 type newsServiceImpl struct {
-    newsRepo newsRepo.NewsRepository
-    userRepo userRepo.UserRepo
+	newsRepo newsRepo.NewsRepository
 }
 
-func (service *newsServiceImpl) GetAllNews(userID int) (*dto.NewsListResponse, error) {
-    userExists, err := service.userRepo.IsUserExist(userID)
+func (service *newsServiceImpl) GetAllNews() (*dto.NewsListResponse, error) {
+	log.Println("Fetching all news...")
+	news, err := service.newsRepo.GetAllNews()
 
-    if err != nil {
-        return nil, fmt.Errorf("error checking user existence: %w", err)
-    }
+	if err != nil {
+		log.Printf("Error fetching all news: %v", err)
+		return nil, fmt.Errorf("error getting all news: %w", err)
+	}
 
-    if !userExists {
-        return nil, fmt.Errorf("user with ID %d does not exist", userID)
-    }
+	if news == nil {
+		log.Println("No news found, returning empty list")
+		return &dto.NewsListResponse{
+			News:  []dto.NewsResponse{},
+			Total: 0,
+		}, nil
+	}
 
-    news, err := service.newsRepo.GetAllNews()
-
-    if err != nil {
-        return nil, fmt.Errorf("error getting news: %w", err)
-    }
-
-    filteredNews := []dto.NewsResponse{}
-
-    for _, n := range news.News {
-        if n.AuthorId == userID {
-            filteredNews = append(filteredNews, n)
-        }
-    }
-
-    return &dto.NewsListResponse{
-        News:  filteredNews,
-        Total: len(filteredNews),
-    }, nil
+	log.Println("Successfully fetched all news")
+	return news, nil
 }
 
-func (service *newsServiceImpl) GetNewsByID(userID int, id int) (*dto.NewsResponse, error) {
-    userExists, err := service.userRepo.IsUserExist(userID)
+func (service *newsServiceImpl) GetNewsByID(id int) (*dto.NewsResponse, error) {
+	log.Printf("Fetching news by ID: %d...", id)
+	news, err := service.newsRepo.GetNewsById(id)
 
-    if err != nil {
-        return nil, fmt.Errorf("error checking user existence: %w", err)
-    }
+	if err != nil {
+		log.Printf("Error fetching news by ID %d: %v", id, err)
+		return nil, fmt.Errorf("error getting news by ID: %w", err)
+	}
 
-    if !userExists {
-        return nil, fmt.Errorf("user with ID %d does not exist", userID)
-    }
+	if news == nil {
+		log.Printf("News with ID %d not found", id)
+		return nil, fmt.Errorf("news with ID %d not found", id)
+	}
 
-    news, err := service.newsRepo.GetNewsById(id)
-
-    if err != nil {
-        return nil, fmt.Errorf("error getting news: %w", err)
-    }
-
-    return news, nil
+	log.Printf("Successfully fetched news by ID: %d", id)
+	return news, nil
 }
 
-func (service *newsServiceImpl) CreateNews(userID int, news *dto.NewsCreateRequest) error {
-    userExists, err := service.userRepo.IsUserExist(userID)
+func (service *newsServiceImpl) CreateNews(news *dto.NewsCreateRequest) error {
+	log.Println("Creating news...")
+	err := service.newsRepo.CreateNews(news)
 
-    if err != nil {
-        return fmt.Errorf("error checking user existence: %w", err)
-    }
+	if err != nil {
+		log.Printf("Error creating news: %v", err)
+		return fmt.Errorf("error creating news: %w", err)
+	}
 
-    if !userExists {
-        return fmt.Errorf("user with ID %d does not exist", userID)
-    }
-
-    news.AuthorId = userID
-
-    err = service.newsRepo.CreateNews(news)
-
-    if err != nil {
-        return fmt.Errorf("error creating news: %w", err)
-    }
-
-    return nil
+	log.Println("Successfully created news")
+	return nil
 }
 
-func (service *newsServiceImpl) UpdateNews(userID int, newsId int, news dto.NewsUpdateRequest) error {
-    userExists, err := service.userRepo.IsUserExist(userID)
+func (service *newsServiceImpl) UpdateNews(newsId int, news dto.NewsUpdateRequest) error {
+	log.Printf("Updating news with ID: %d...", newsId)
+	err := service.newsRepo.UpdateNews(newsId, news)
 
-    if err != nil {
-        return fmt.Errorf("error checking user existence: %w", err)
-    }
+	if err != nil {
+		log.Printf("Error updating news with ID %d: %v", newsId, err)
+		return fmt.Errorf("error updating news: %w", err)
+	}
 
-    if !userExists {
-        return fmt.Errorf("user with ID %d does not exist", userID)
-    }
-
-    news.AuthorId = userID
-
-    err = service.newsRepo.UpdateNews(newsId, news)
-
-    if err != nil {
-        return fmt.Errorf("error updating news: %w", err)
-    }
-
-    return nil
+	log.Printf("Successfully updated news with ID: %d", newsId)
+	return nil
 }
 
-func (service *newsServiceImpl) DeleteNews(userID int, id int) error {
-    userExists, err := service.userRepo.IsUserExist(userID)
+func (service *newsServiceImpl) DeleteNews(id int) error {
+	log.Printf("Deleting news with ID: %d...", id)
+	err := service.newsRepo.DeleteNews(id)
 
-    if err != nil {
-        return fmt.Errorf("error checking user existence: %w", err)
-    }
+	if err != nil {
+		log.Printf("Error deleting news with ID %d: %v", id, err)
+		return fmt.Errorf("error deleting news: %w", err)
+	}
 
-    if !userExists {
-        return fmt.Errorf("user with ID %d does not exist", userID)
-    }
-
-    err = service.newsRepo.DeleteNews(id)
-
-    if err != nil {
-        return fmt.Errorf("error deleting news: %w", err)
-    }
-
-    return nil
+	log.Printf("Successfully deleted news with ID: %d", id)
+	return nil
 }
 
-func NewNewsService(newsRepo newsRepo.NewsRepository, userRepo userRepo.UserRepo) NewsService {
-    return &newsServiceImpl{
-        newsRepo: newsRepo,
-        userRepo: userRepo,
-    }
+func NewNewsService(newsRepo newsRepo.NewsRepository) NewsService {
+	log.Println("Initializing NewsService...")
+	return &newsServiceImpl{
+		newsRepo: newsRepo,
+	}
 }
