@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"errors"
+
+	idgenerate "github.com/ahmadammarm/go-rest-api-template/pkg/id-generate"
 	userDTO "github.com/ahmadammarm/go-rest-api-template/internal/user/dto"
 	userRepo "github.com/ahmadammarm/go-rest-api-template/internal/user/repository"
 	"github.com/golang-jwt/jwt/v4"
@@ -29,6 +31,9 @@ func NewUserService(userRepo userRepo.UserRepo) UserService {
 }
 
 func (service *userServiceImpl) RegisterUser(user *userDTO.UserRegisterRequest) error {
+
+	user.ID = idgenerate.GenerateUniqueID()
+
 	return service.userRepo.RegisterUser(user)
 }
 
@@ -62,12 +67,12 @@ func (service *userServiceImpl) UpdateUser(user *userDTO.UserUpdateRequest, id i
 }
 
 func (service *userServiceImpl) GetUserByID(userId int) (*userDTO.UserResponse, error) {
-    user, err := service.userRepo.GetUserByID(userId)
-    if err != nil {
-        return nil, err
-    }
+	user, err := service.userRepo.GetUserByID(userId)
+	if err != nil {
+		return nil, err
+	}
 
-    return user, nil
+	return user, nil
 }
 
 func (service *userServiceImpl) UserList() (*userDTO.UserListResponse, error) {

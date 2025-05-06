@@ -3,8 +3,8 @@ package handler
 import (
 	"strconv"
 
-	formvalidation "github.com/ahmadammarm/go-rest-api-template/helper/form-validation"
-	"github.com/ahmadammarm/go-rest-api-template/helper/response"
+	formvalidation "github.com/ahmadammarm/go-rest-api-template/pkg/form-validation"
+	"github.com/ahmadammarm/go-rest-api-template/pkg/response"
 	"github.com/ahmadammarm/go-rest-api-template/internal/user/dto"
 	userService "github.com/ahmadammarm/go-rest-api-template/internal/user/service"
 	"github.com/go-playground/validator/v10"
