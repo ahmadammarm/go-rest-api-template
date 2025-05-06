@@ -1,11 +1,11 @@
 package idgenerate
 
 import (
-    "math/rand"
-    "time"
+	"math/rand"
+	"time"
 )
 
 func GenerateUniqueID() int {
-    rand.Seed(time.Now().UnixNano())
-    return rand.Int()
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	return r.Int()
 }
