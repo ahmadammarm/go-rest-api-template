@@ -14,7 +14,7 @@ import (
 
 type UserService interface {
 	RegisterUser(user *userDTO.UserRegisterRequest) error
-	LoginUser(user *userDTO.UserLoginRequest) (string, error)
+	LoginUser(user *userDTO.UserLoginRequest) (any, error)
 	UpdateUser(user *userDTO.UserUpdateRequest, id int) error
 	GetUserByID(userId int) (*userDTO.UserResponse, error)
 	UserList() (*userDTO.UserListResponse, error)
@@ -37,7 +37,7 @@ func (service *userServiceImpl) RegisterUser(user *userDTO.UserRegisterRequest) 
 	return service.userRepo.RegisterUser(user)
 }
 
-func (service *userServiceImpl) LoginUser(user *userDTO.UserLoginRequest) (string, error) {
+func (service *userServiceImpl) LoginUser(user *userDTO.UserLoginRequest) (any, error) {
 	dbUser, err := service.userRepo.LoginUser(user)
 	if err != nil {
 		return "", err
@@ -59,7 +59,14 @@ func (service *userServiceImpl) LoginUser(user *userDTO.UserLoginRequest) (strin
 		return "", err
 	}
 
-	return stringToken, nil
+	response := userDTO.UserJWTResponse{
+        ID:       dbUser.ID,
+        Name:     dbUser.Name,
+        Email:    dbUser.Email,
+        Token:    stringToken,
+    }
+
+    return response, nil
 }
 
 func (service *userServiceImpl) UpdateUser(user *userDTO.UserUpdateRequest, id int) error {

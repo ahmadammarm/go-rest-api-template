@@ -4,7 +4,7 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/ahmadammarm/go-rest-api-template/helper/response"
+	"github.com/ahmadammarm/go-rest-api-template/pkg/response"
 	"github.com/ahmadammarm/go-rest-api-template/internal/middleware"
 	"github.com/ahmadammarm/go-rest-api-template/internal/news/dto"
 	newsService "github.com/ahmadammarm/go-rest-api-template/internal/news/service"

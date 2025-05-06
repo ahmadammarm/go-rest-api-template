@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 	"log"
-	"github.com/ahmadammarm/go-rest-api-template/helper/response"
+	"github.com/ahmadammarm/go-rest-api-template/pkg/response"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
 )
