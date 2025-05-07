@@ -73,9 +73,15 @@ POSTGRES_PORT=
 POSTGRES_USER=
 POSTGRES_PASSWORD=
 POSTGRES_DB=
-JWT_SECRET_KEY=
-CORS_ALLOW_ORIGINS=your-header-http-domain   example: http//localhost:5173
+JWT_SECRET_KEY=your-jwt-secret-key
+CORS_ALLOW_ORIGINS=your-header-http-domain
 ```
+
+- POSTGRES: Configuration for PostgreSQL database connection.
+
+- JWT_SECRET_KEY: The secret key used for JWT token signing and verification.
+
+- CORS_ALLOW_ORIGINS: The allowed origins for Cross-Origin Resource Sharing (CORS). This is the domain that will be able to access resources from this API. For example, if you are running the frontend on http://localhost:5173, you should set this environment variable to http://localhost:5173.
 
 
 5. Run the project:
