@@ -31,13 +31,12 @@ func main() {
 		DisableStartupMessage: true,
 	})
 
-	// Tambahkan middleware CORS
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://localhost:5173", // Sesuaikan dengan URL frontend Anda
+		AllowOrigins:     os.Getenv("CORS_ALLOW_ORIGINS"),
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
 		AllowHeaders:     "Origin,Content-Type,Accept,Content-Length,Accept-Language,Accept-Encoding,Connection,Access-Control-Allow-Origin,Authorization",
 		AllowCredentials: true,
-		MaxAge:           86400, // Preflighted request valid selama 24 jam
+		MaxAge:           86400,
 	}))
 
 	api := app.Group("/api/v1")
