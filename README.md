@@ -17,6 +17,7 @@ A RESTful API template built with Go programming language.
 - **Repository Pattern**: Managing interactions with databases using the repository pattern.
 - **CRUD Implementation**: Implement CRUD logic in the model entity.
 - **Configuration**: Supports environment variables configuration via .env files.
+- **CORS Support**: Supports Cross-Origin Resource Sharing (CORS) configuration.
 - **Deployment**: Supports build and deploy using Docker.
 
 ## REST API Design
@@ -64,6 +65,16 @@ go mod download
 
 ```sh
 cp .env.example .env
+```
+
+```
+POSTGRES_HOST=localhost
+POSTGRES_PORT=
+POSTGRES_USER=
+POSTGRES_PASSWORD=
+POSTGRES_DB=
+JWT_SECRET_KEY=
+CORS_ALLOW_ORIGINS=your-header-http-domain   example: http//localhost:5173
 ```
 
 
