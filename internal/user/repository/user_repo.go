@@ -104,7 +104,7 @@ func (repository *userRepoImpl) GetUserByID(userId int) (*userDTO.UserResponse, 
 	query := `SELECT id, name, email, password FROM users WHERE id = $1`
 	user := &userDTO.UserResponse{}
 
-	err := repository.db.QueryRow(query, userId).Scan(&user.ID, &user.Name, &user.Email, &user.Password)
+	err := repository.db.QueryRow(query, userId).Scan(&user.ID, &user.Name, &user.Email)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.New("user not found")
@@ -126,7 +126,7 @@ func (repository *userRepoImpl) UserList() (*userDTO.UserListResponse, error) {
 	var users []userDTO.UserResponse
 	for rows.Next() {
 		user := userDTO.UserResponse{}
-		err := rows.Scan(&user.ID, &user.Email, &user.Name, &user.Password)
+		err := rows.Scan(&user.ID, &user.Email, &user.Name)
 		if err != nil {
 			return nil, err
 		}
