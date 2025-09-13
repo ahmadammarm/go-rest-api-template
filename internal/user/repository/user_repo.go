@@ -101,7 +101,7 @@ func (repository *userRepoImpl) UpdateUser(user *userDTO.UserUpdateRequest, id i
 }
 
 func (repository *userRepoImpl) GetUserByID(userId int) (*userDTO.UserResponse, error) {
-	query := `SELECT id, name, email, password FROM users WHERE id = $1`
+	query := `SELECT id, name, email FROM users WHERE id = $1`
 	user := &userDTO.UserResponse{}
 
 	err := repository.db.QueryRow(query, userId).Scan(&user.ID, &user.Name, &user.Email)
@@ -116,7 +116,7 @@ func (repository *userRepoImpl) GetUserByID(userId int) (*userDTO.UserResponse, 
 }
 
 func (repository *userRepoImpl) UserList() (*userDTO.UserListResponse, error) {
-	query := `SELECT id, email, name, password FROM users`
+	query := `SELECT id, email, name FROM users`
 	rows, err := repository.db.Query(query)
 	if err != nil {
 		return nil, err
