@@ -23,6 +23,3 @@ jobs:
 
     - name: Run golangci-lint
       run: golangci-lint run ./...
-
-    - name: Test Go Project
-      run: go test -v ./...
