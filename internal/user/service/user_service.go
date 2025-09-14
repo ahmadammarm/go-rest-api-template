@@ -69,6 +69,7 @@ func (service *userServiceImpl) LoginUser(user *userDTO.UserLoginRequest) (any, 
         ID:       dbUser.ID,
         Name:     dbUser.Name,
         Email:    dbUser.Email,
+        Password: dbUser.Password,
         Token:    stringToken,
     }
 
