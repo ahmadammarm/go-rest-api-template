@@ -3,10 +3,10 @@ package handler
 import (
 	"strconv"
 
-	formvalidation "github.com/ahmadammarm/go-rest-api-template/pkg/form-validation"
-	"github.com/ahmadammarm/go-rest-api-template/pkg/response"
 	"github.com/ahmadammarm/go-rest-api-template/internal/user/dto"
 	userService "github.com/ahmadammarm/go-rest-api-template/internal/user/service"
+	formvalidation "github.com/ahmadammarm/go-rest-api-template/pkg/form-validation"
+	"github.com/ahmadammarm/go-rest-api-template/pkg/response"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
@@ -28,10 +28,14 @@ func (handler *UserHandler) RegisterUser(context *fiber.Ctx) error {
 	}
 
 	if err := handler.userService.RegisterUser(user); err != nil {
+		if err.Error() == "email already exists" {
+			return response.JSONResponse(context, 409, "Email Already Exists", nil)
+		}
+	} else {
 		return response.JSONResponse(context, 500, "Register User Failed", nil)
 	}
 
-	return response.JSONResponse(context, 200, "Register User Success", nil)
+	return response.JSONResponse(context, 200, "Register User Success", user)
 }
 
 func (handler *UserHandler) LoginUser(context *fiber.Ctx) error {

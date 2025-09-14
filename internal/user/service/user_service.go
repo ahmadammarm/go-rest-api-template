@@ -34,6 +34,12 @@ func (service *userServiceImpl) RegisterUser(user *userDTO.UserRegisterRequest) 
 
 	user.ID = idgenerate.GenerateUniqueID()
 
+	if exists, err := service.userRepo.IsEmailExists(user.Email); err != nil {
+		return err
+	} else if exists {
+		return errors.New("email already exists")
+	}
+
 	return service.userRepo.RegisterUser(user)
 }
 

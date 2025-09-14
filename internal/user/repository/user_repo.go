@@ -13,6 +13,7 @@ type UserRepo interface {
 	LoginUser(user *userDTO.UserLoginRequest) (*userDTO.UserJWTResponse, error)
 	UpdateUser(user *userDTO.UserUpdateRequest, id int) error
 	GetUserByID(userId int) (*userDTO.UserResponse, error)
+	IsEmailExists(email string) (bool, error)
 	UserList() (*userDTO.UserListResponse, error)
 }
 
@@ -140,6 +141,16 @@ func (repository *userRepoImpl) UserList() (*userDTO.UserListResponse, error) {
 	total := len(users)
 
 	return &userDTO.UserListResponse{Users: users, Total: total}, nil
+}
+
+func (repository *userRepoImpl) IsEmailExists(email string) (bool, error) {
+    query := `SELECT COUNT(1) FROM users WHERE email = $1`
+    var count int
+    err := repository.db.QueryRow(query, email).Scan(&count)
+    if err != nil {
+        return false, err
+    }
+    return count > 0, nil
 }
 
 func NewUserRepository(db *sql.DB) UserRepo {
