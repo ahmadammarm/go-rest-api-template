@@ -16,6 +16,11 @@ type JWTClaims struct {
 }
 
 func JWTAuth() fiber.Handler {
+	secret := os.Getenv("JWT_SECRET_KEY")
+	if secret == "" {
+		log.Fatal("JWT_SECRET_KEY is missing in environment variables")
+	}
+
 	return func(context *fiber.Ctx) error {
 		authHeader := context.Get("Authorization")
 		if authHeader == "" {
@@ -30,12 +35,6 @@ func JWTAuth() fiber.Handler {
 
 		if stringToken == "" {
 			return response.JSONResponse(context, 401, "Unauthorized: Empty Token", nil)
-		}
-
-		secret := os.Getenv("JWT_SECRET_KEY")
-		if secret == "" {
-			log.Println("Error: JWT_SECRET_KEY is missing in environment variables")
-			return response.JSONResponse(context, 500, "Internal Server Error", nil)
 		}
 
 		token, err := jwt.ParseWithClaims(stringToken, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {

@@ -6,10 +6,10 @@ import (
 
 	"errors"
 
-	idgenerate "github.com/ahmadammarm/go-rest-api-template/pkg/id-generate"
 	userDTO "github.com/ahmadammarm/go-rest-api-template/internal/user/dto"
 	userRepo "github.com/ahmadammarm/go-rest-api-template/internal/user/repository"
 	"github.com/golang-jwt/jwt/v4"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService interface {
@@ -21,18 +21,18 @@ type UserService interface {
 }
 
 type userServiceImpl struct {
-	userRepo userRepo.UserRepo
+	userRepo  userRepo.UserRepo
+	jwtSecret string
 }
 
 func NewUserService(userRepo userRepo.UserRepo) UserService {
 	return &userServiceImpl{
-		userRepo: userRepo,
+		userRepo:  userRepo,
+		jwtSecret: os.Getenv("JWT_SECRET_KEY"),
 	}
 }
 
 func (service *userServiceImpl) RegisterUser(user *userDTO.UserRegisterRequest) error {
-
-	user.ID = idgenerate.GenerateUniqueID()
 
 	if exists, err := service.userRepo.IsEmailExists(user.Email); err != nil {
 		return err
@@ -55,29 +55,42 @@ func (service *userServiceImpl) LoginUser(user *userDTO.UserLoginRequest) (any, 
 		"exp":     time.Now().Add(time.Hour * 24).Unix(),
 	})
 
-	secretToken := os.Getenv("JWT_SECRET_KEY")
-	if secretToken == "" {
+	if service.jwtSecret == "" {
 		return "", errors.New("JWT_SECRET is not set in environment variables")
 	}
 
-	stringToken, err := token.SignedString([]byte(secretToken))
+	stringToken, err := token.SignedString([]byte(service.jwtSecret))
 	if err != nil {
 		return "", err
 	}
 
 	response := userDTO.UserJWTResponse{
-        ID:       dbUser.ID,
-        Name:     dbUser.Name,
-        Email:    dbUser.Email,
-        Password: dbUser.Password,
-        Token:    stringToken,
-    }
+		ID:    dbUser.ID,
+		Name:  dbUser.Name,
+		Email: dbUser.Email,
+		Token: stringToken,
+	}
 
-    return response, nil
+	return response, nil
 }
 
 func (service *userServiceImpl) UpdateUser(user *userDTO.UserUpdateRequest, id int) error {
-	return service.userRepo.UpdateUser(user, id)
+	if exists, err := service.userRepo.IsEmailTakenByOther(user.Email, id); err != nil {
+		return err
+	} else if exists {
+		return errors.New("email already exists")
+	}
+
+	var hashedPassword string
+	if user.Password != "" {
+		hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return err
+		}
+		hashedPassword = string(hash)
+	}
+
+	return service.userRepo.UpdateUser(user.Name, user.Email, hashedPassword, id)
 }
 
 func (service *userServiceImpl) GetUserByID(userId int) (*userDTO.UserResponse, error) {

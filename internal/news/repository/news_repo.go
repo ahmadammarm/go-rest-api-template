@@ -61,33 +61,21 @@ func (repo *newsRepository) GetNewsById(id int) (*dto.NewsResponse, error) {
               FROM news n
               JOIN users u ON n.user_id = u.id WHERE n.id = $1`
 
-	rows, err := repo.db.Query(query, id)
+	var n dto.NewsResponse
+	err := repo.db.QueryRow(query, id).Scan(&n.ID, &n.Title, &n.Content, &n.AuthorId, &n.AuthorName, &n.CreatedAt, &n.UpdatedAt)
 
 	if err != nil {
-		return nil, err
-	}
-
-	defer rows.Close()
-
-	var n dto.NewsResponse
-	if rows.Next() {
-		err := rows.Scan(&n.ID, &n.Title, &n.Content, &n.AuthorId, &n.AuthorName, &n.CreatedAt, &n.UpdatedAt)
-		if err != nil {
-			return nil, err
+		if err == sql.ErrNoRows {
+			return nil, errors.New("news not found")
 		}
-		return &n, nil
-	}
-	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 
-	return nil, errors.New("news not found")
+	return &n, nil
 }
 
 func (repo *newsRepository) CreateNews(news *dto.NewsCreateRequest) error {
 	query := "INSERT INTO news (title, content, user_id) VALUES ($1, $2, $3) RETURNING id"
-
-	news.CreatedAt = strconv.FormatInt(time.Now().Unix(), 10)
 
 	err := repo.db.QueryRow(query, news.Title, news.Content, news.AuthorId).Scan(&news.ID)
 
@@ -100,25 +88,43 @@ func (repo *newsRepository) CreateNews(news *dto.NewsCreateRequest) error {
 }
 
 func (repo *newsRepository) UpdateNews(id int, news dto.NewsUpdateRequest) error {
-    query := "UPDATE news SET title = $1, content = $2, user_id = $3, updated_at = $4 WHERE id = $5"
+	query := "UPDATE news SET title = $1, content = $2, user_id = $3, updated_at = $4 WHERE id = $5"
 
-    updatedAt := time.Now()
+	updatedAt := time.Now()
 
-    _, err := repo.db.Exec(query, news.Title, news.Content, news.AuthorId, updatedAt, id)
+	result, err := repo.db.Exec(query, news.Title, news.Content, news.AuthorId, updatedAt, id)
 
-    if err != nil {
-        return err
-    }
+	if err != nil {
+		return err
+	}
 
-    return nil
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return errors.New("news not found")
+	}
+
+	return nil
 }
 
 func (repo *newsRepository) DeleteNews(id int) error {
 	query := "DELETE FROM news WHERE id = $1"
 
-	_, err := repo.db.Exec(query, id)
+	result, err := repo.db.Exec(query, id)
 	if err != nil {
 		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return errors.New("news not found")
 	}
 
 	return nil

@@ -11,9 +11,10 @@ import (
 type UserRepo interface {
 	RegisterUser(user *userDTO.UserRegisterRequest) error
 	LoginUser(user *userDTO.UserLoginRequest) (*userDTO.UserJWTResponse, error)
-	UpdateUser(user *userDTO.UserUpdateRequest, id int) error
+	UpdateUser(name string, email string, hashedPassword string, id int) error
 	GetUserByID(userId int) (*userDTO.UserResponse, error)
 	IsEmailExists(email string) (bool, error)
+	IsEmailTakenByOther(email string, id int) (bool, error)
 	UserList() (*userDTO.UserListResponse, error)
 }
 
@@ -21,7 +22,7 @@ type userRepoImpl struct {
 	db *sql.DB
 }
 
-func (repository *userRepoImpl) RegisterUser(user *userDTO.UserRegisterRequest) error {
+func (repository *userRepoImpl) RegisterUser(user *userDTO.UserRegisterRequest) (err error) {
 	tx, err := repository.db.Begin()
 
 	if err != nil {
@@ -30,14 +31,10 @@ func (repository *userRepoImpl) RegisterUser(user *userDTO.UserRegisterRequest) 
 
 	defer func() {
 		if pan := recover(); pan != nil {
-			if rollbackErr := tx.Rollback(); rollbackErr != nil {
-				panic(rollbackErr)
-			}
+			tx.Rollback()
 			panic(pan)
 		} else if err != nil {
-			if rollbackErr := tx.Rollback(); rollbackErr != nil {
-				panic(rollbackErr)
-			}
+			tx.Rollback()
 		} else {
 			err = tx.Commit()
 		}
@@ -54,9 +51,6 @@ func (repository *userRepoImpl) RegisterUser(user *userDTO.UserRegisterRequest) 
 	err = tx.QueryRow(query, user.Email, user.Name, hashedPassword).Scan(&user.ID)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil
-		}
 		return err
 	}
 
@@ -84,16 +78,10 @@ func (repository *userRepoImpl) LoginUser(user *userDTO.UserLoginRequest) (*user
 
 }
 
-func (repository *userRepoImpl) UpdateUser(user *userDTO.UserUpdateRequest, id int) error {
-	query := `UPDATE users SET name = $1, email = $2, password = $3 WHERE id = $4`
+func (repository *userRepoImpl) UpdateUser(name string, email string, hashedPassword string, id int) error {
+	query := `UPDATE users SET name = $1, email = $2, password = CASE WHEN $3 <> '' THEN $3 ELSE password END WHERE id = $4`
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-
-	if err != nil {
-		return err
-	}
-
-	_, err = repository.db.Exec(query, user.Name, user.Email, hashedPassword, id)
+	_, err := repository.db.Exec(query, name, email, hashedPassword, id)
 	if err != nil {
 		return err
 	}
@@ -141,6 +129,16 @@ func (repository *userRepoImpl) UserList() (*userDTO.UserListResponse, error) {
 	total := len(users)
 
 	return &userDTO.UserListResponse{Users: users, Total: total}, nil
+}
+
+func (repository *userRepoImpl) IsEmailTakenByOther(email string, id int) (bool, error) {
+	query := `SELECT COUNT(1) FROM users WHERE email = $1 AND id <> $2`
+	var count int
+	err := repository.db.QueryRow(query, email, id).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
 func (repository *userRepoImpl) IsEmailExists(email string) (bool, error) {

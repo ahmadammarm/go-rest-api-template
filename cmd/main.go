@@ -39,10 +39,8 @@ func main() {
 		MaxAge:           86400,
 	}))
 
-	api := app.Group("/api/v1")
-
-	users.InitializeUser(db, validator.New()).UserRouters(api)
-	news.InitializeNews(db, validator.New()).NewsRouters(api)
+	users.InitializeUser(db, validator.New()).UserRouters(app)
+	news.InitializeNews(db, validator.New()).NewsRouters(app)
 
 	if error := app.Listen(":8080"); error != nil {
 		log.Printf("Failed to start server: %v", error)

@@ -31,11 +31,16 @@ func (handler *UserHandler) RegisterUser(context *fiber.Ctx) error {
 		if err.Error() == "email already exists" {
 			return response.JSONResponse(context, 409, "Email Already Exists", nil)
 		}
-	} else {
 		return response.JSONResponse(context, 500, "Register User Failed", nil)
 	}
 
-	return response.JSONResponse(context, 200, "Register User Success", user)
+	responseUser := dto.UserResponse{
+		ID:    user.ID,
+		Name:  user.Name,
+		Email: user.Email,
+	}
+
+	return response.JSONResponse(context, 200, "Register User Success", responseUser)
 }
 
 func (handler *UserHandler) LoginUser(context *fiber.Ctx) error {
@@ -69,6 +74,9 @@ func (handler *UserHandler) UpdateUser(context *fiber.Ctx) error {
 	userId := context.Locals("user_id").(int)
 
 	if err := handler.userService.UpdateUser(user, userId); err != nil {
+		if err.Error() == "email already exists" {
+			return response.JSONResponse(context, 409, "Email Already Exists", nil)
+		}
 		return response.JSONResponse(context, 500, "Update User Failed", nil)
 	}
 
@@ -101,10 +109,11 @@ func (handler *UserHandler) UserList(context *fiber.Ctx) error {
 }
 
 func (handler *UserHandler) UserRouters(router fiber.Router) {
-	router.Post("/user/register", handler.RegisterUser)
-	router.Post("/user/login", handler.LoginUser)
+	router.Post("/auth/register", handler.RegisterUser)
+	router.Post("/auth/login", handler.LoginUser)
 	router.Get("/users", handler.UserList)
-	router.Get("/user/:id", handler.GetUserByID)
+	router.Get("/users/:id", handler.GetUserByID)
+	router.Put("/users/me", middleware.JWTAuth(), handler.UpdateUser)
 }
 
 func NewUserHandler(userService userService.UserService, validation *validator.Validate) *UserHandler {

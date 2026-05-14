@@ -83,6 +83,12 @@ func (handler *NewsHandler) UpdateNews(context *fiber.Ctx) error {
 		return response.JSONResponse(context, 400, "Bad Request", nil)
 	}
 
+	userId, ok := context.Locals("user_id").(int)
+	if !ok {
+		return response.JSONResponse(context, 401, "Unauthorized", nil)
+	}
+	news.AuthorId = userId
+
 	if err := handler.validation.Struct(news); err != nil {
 		log.Println("Validation error for updating news:", err)
 		return response.JSONResponse(context, 422, "Validation Error", nil)
