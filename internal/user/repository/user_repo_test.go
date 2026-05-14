@@ -172,37 +172,13 @@ func TestUpdateUser_Success(t *testing.T) {
 
 	repo := repository.NewUserRepository(db)
 
-	newPassword := "newpassword123"
-
-	mock.ExpectExec(`UPDATE users SET name = \$1, email = \$2, password = \$3 WHERE id = \$4`).
-		WithArgs("Updated User", "updated@example.com", sqlmock.AnyArg(), 1).
+	mock.ExpectExec(`UPDATE users SET name = \$1, email = \$2, password = CASE WHEN \$3 <> '' THEN \$3 ELSE password END WHERE id = \$4`).
+		WithArgs("Updated User", "updated@example.com", "hashedpassword123", 1).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
-	request := &userDTO.UserUpdateRequest{
-		Name:     "Updated User",
-		Email:    "updated@example.com",
-		Password: newPassword,
-	}
-
-	err = repo.UpdateUser(request, 1)
+	err = repo.UpdateUser("Updated User", "updated@example.com", "hashedpassword123", 1)
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestUpdateUser_HashPasswordError(t *testing.T) {
-	db, _, err := sqlmock.New()
-	assert.NoError(t, err)
-	defer db.Close()
-
-	repo := repository.NewUserRepository(db)
-	request := &userDTO.UserUpdateRequest{
-		Name:     "Updated User",
-		Email:    "updated@example.com",
-		Password: string(make([]byte, bcrypt.MaxCost+1)),
-	}
-
-	err = repo.UpdateUser(request, 1)
-	assert.Error(t, err)
 }
 
 func TestUpdateUser_QueryError(t *testing.T) {
@@ -210,31 +186,25 @@ func TestUpdateUser_QueryError(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("newpassword123"), bcrypt.DefaultCost)
-
-	mock.ExpectExec(`UPDATE users SET name = \$1, email = \$2, password = \$3 WHERE id = \$4`).
-		WithArgs("Updated User", "updated@example.com", hashedPassword, 1).
+	mock.ExpectExec(`UPDATE users SET name = \$1, email = \$2, password = CASE WHEN \$3 <> '' THEN \$3 ELSE password END WHERE id = \$4`).
+		WithArgs("Updated User", "updated@example.com", "hashedpassword123", 1).
 		WillReturnError(errors.New("query error"))
 
 	repo := repository.NewUserRepository(db)
-	request := &userDTO.UserUpdateRequest{
-		Name:     "Updated User",
-		Email:    "updated@example.com",
-		Password: "newpassword123",
-	}
 
-	err = repo.UpdateUser(request, 1)
+	err = repo.UpdateUser("Updated User", "updated@example.com", "hashedpassword123", 1)
 	assert.Error(t, err)
 }
+
 func TestGetUserByID_Success(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	assert.NoError(t, err)
 	defer db.Close()
 
-	mock.ExpectQuery(`SELECT id, name, email, password FROM users WHERE id = \$1`).
+	mock.ExpectQuery(`SELECT id, name, email FROM users WHERE id = \$1`).
 		WithArgs(1).
-		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email", "password"}).
-			AddRow(1, "Test User", "test@example.com", "hashedpassword"))
+		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+			AddRow(1, "Test User", "test@example.com"))
 
 	repo := repository.NewUserRepository(db)
 
@@ -251,7 +221,7 @@ func TestGetUserByID_UserNotFound(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	mock.ExpectQuery(`SELECT id, name, email, password FROM users WHERE id = \$1`).
+	mock.ExpectQuery(`SELECT id, name, email FROM users WHERE id = \$1`).
 		WithArgs(999).
 		WillReturnError(sql.ErrNoRows)
 
@@ -268,7 +238,7 @@ func TestGetUserByID_QueryError(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	mock.ExpectQuery(`SELECT id, name, email, password FROM users WHERE id = \$1`).
+	mock.ExpectQuery(`SELECT id, name, email FROM users WHERE id = \$1`).
 		WithArgs(1).
 		WillReturnError(errors.New("query error"))
 
@@ -285,10 +255,10 @@ func TestUserList_Success(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	mock.ExpectQuery(`SELECT id, email, name, password FROM users`).
-		WillReturnRows(sqlmock.NewRows([]string{"id", "email", "name", "password"}).
-			AddRow(1, "test1@example.com", "Test User 1", "hashedpassword1").
-			AddRow(2, "test2@example.com", "Test User 2", "hashedpassword2"))
+	mock.ExpectQuery(`SELECT id, email, name FROM users`).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "email", "name"}).
+			AddRow(1, "test1@example.com", "Test User 1").
+			AddRow(2, "test2@example.com", "Test User 2"))
 
 	repo := repository.NewUserRepository(db)
 
@@ -307,8 +277,8 @@ func TestUserList_Empty(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	mock.ExpectQuery(`SELECT id, email, name, password FROM users`).
-		WillReturnRows(sqlmock.NewRows([]string{"id", "email", "name", "password"}))
+	mock.ExpectQuery(`SELECT id, email, name FROM users`).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "email", "name"}))
 
 	repo := repository.NewUserRepository(db)
 
@@ -324,7 +294,7 @@ func TestUserList_QueryError(t *testing.T) {
 	assert.NoError(t, err)
 	defer db.Close()
 
-	mock.ExpectQuery(`SELECT id, email, name, password FROM users`).
+	mock.ExpectQuery(`SELECT id, email, name FROM users`).
 		WillReturnError(errors.New("query error"))
 
 	repo := repository.NewUserRepository(db)

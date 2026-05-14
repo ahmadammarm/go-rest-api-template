@@ -84,6 +84,7 @@ func TestGetNewsByID(t *testing.T) {
 
 		result, err := repo.GetNewsById(999)
 		assert.Error(t, err)
+		assert.Equal(t, "news not found", err.Error())
 		assert.Nil(t, result)
 	})
 
@@ -142,29 +143,46 @@ func TestUpdateNews(t *testing.T) {
 	repo := repository.NewNewsRepository(db)
 
 	t.Run("success", func(t *testing.T) {
-		// Use ExpectExec instead of ExpectQuery since your code uses Exec
 		mock.ExpectExec("UPDATE news SET title = \\$1, content = \\$2, user_id = \\$3, updated_at = \\$4 WHERE id = \\$5").
-			WithArgs("Title 1", "Content 1", 0, sqlmock.AnyArg(), 1). // Use AnyArg() for the timestamp
+			WithArgs("Title 1", "Content 1", 1, sqlmock.AnyArg(), 1).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		req := &dto.NewsUpdateRequest{
-			ID:      1,
-			Title:   "Title 1",
-			Content: "Content 1",
+			ID:       1,
+			Title:    "Title 1",
+			Content:  "Content 1",
+			AuthorId: 1,
 		}
 		err := repo.UpdateNews(req.ID, *req)
 		assert.NoError(t, err)
 	})
 
+	t.Run("not found", func(t *testing.T) {
+		mock.ExpectExec("UPDATE news SET title = \\$1, content = \\$2, user_id = \\$3, updated_at = \\$4 WHERE id = \\$5").
+			WithArgs("Title 1", "Content 1", 1, sqlmock.AnyArg(), 999).
+			WillReturnResult(sqlmock.NewResult(0, 0))
+
+		req := &dto.NewsUpdateRequest{
+			ID:       999,
+			Title:    "Title 1",
+			Content:  "Content 1",
+			AuthorId: 1,
+		}
+		err := repo.UpdateNews(req.ID, *req)
+		assert.Error(t, err)
+		assert.Equal(t, "news not found", err.Error())
+	})
+
 	t.Run("exec error", func(t *testing.T) {
 		mock.ExpectExec("UPDATE news SET title = \\$1, content = \\$2, user_id = \\$3, updated_at = \\$4 WHERE id = \\$5").
-			WithArgs("Title 1", "Content 1", 0, sqlmock.AnyArg(), 999).
+			WithArgs("Title 1", "Content 1", 1, sqlmock.AnyArg(), 999).
 			WillReturnError(errors.New("exec error"))
 
 		req := &dto.NewsUpdateRequest{
-			ID:      999,
-			Title:   "Title 1",
-			Content: "Content 1",
+			ID:       999,
+			Title:    "Title 1",
+			Content:  "Content 1",
+			AuthorId: 1,
 		}
 		err := repo.UpdateNews(req.ID, *req)
 		assert.Error(t, err)
@@ -185,6 +203,16 @@ func TestDeleteNews(t *testing.T) {
 
 		err := repo.DeleteNews(1)
 		assert.NoError(t, err)
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		mock.ExpectExec("DELETE FROM news WHERE id = \\$1").
+			WithArgs(999).
+			WillReturnResult(sqlmock.NewResult(0, 0))
+
+		err := repo.DeleteNews(999)
+		assert.Error(t, err)
+		assert.Equal(t, "news not found", err.Error())
 	})
 
 	t.Run("exec error", func(t *testing.T) {
