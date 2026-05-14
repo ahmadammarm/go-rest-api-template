@@ -31,10 +31,10 @@ func (repository *userRepoImpl) RegisterUser(user *userDTO.UserRegisterRequest) 
 
 	defer func() {
 		if pan := recover(); pan != nil {
-			tx.Rollback()
+			_ = tx.Rollback()
 			panic(pan)
 		} else if err != nil {
-			tx.Rollback()
+			_ = tx.Rollback()
 		} else {
 			err = tx.Commit()
 		}
