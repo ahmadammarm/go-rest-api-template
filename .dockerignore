@@ -1,0 +1,29 @@
+# Go Build Cache
+.cache/
+
+# Binary files
+main
+api-server
+*.exe
+*.test
+*.out
+
+# IDEs
+.vscode/
+.idea/
+
+# Environment
+.env
+*.local
+
+# Docker
+.dockerignore
+docker-compose.override.yaml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
