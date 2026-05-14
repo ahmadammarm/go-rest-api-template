@@ -32,7 +32,7 @@ func main() {
 	})
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "*", // os.Getenv("CORS_ALLOW_ORIGINS"),
+		AllowOrigins:     os.Getenv("CORS_ALLOW_ORIGINS"),
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
 		AllowHeaders:     "Origin,Content-Type,Accept,Content-Length,Accept-Language,Accept-Encoding,Connection,Access-Control-Allow-Origin,Authorization",
 		AllowCredentials: true,
@@ -42,10 +42,14 @@ func main() {
 	users.InitializeUser(db, validator.New()).UserRouters(app)
 	news.InitializeNews(db, validator.New()).NewsRouters(app)
 
-	if error := app.Listen(":8080"); error != nil {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Printf("Server starting on port %s", port)
+	if error := app.Listen(":" + port); error != nil {
 		log.Printf("Failed to start server: %v", error)
 		os.Exit(1)
 	}
-
-	log.Println("Server started on port 8080")
 }

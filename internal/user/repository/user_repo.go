@@ -61,8 +61,9 @@ func (repository *userRepoImpl) RegisterUser(user *userDTO.UserRegisterRequest) 
 func (repository *userRepoImpl) LoginUser(user *userDTO.UserLoginRequest) (*userDTO.UserJWTResponse, error) {
 	query := `SELECT id, name, email, password FROM users WHERE email = $1`
 	jwtUser := &userDTO.UserJWTResponse{}
+	var hashedPassword string
 
-	err := repository.db.QueryRow(query, user.Email).Scan(&jwtUser.ID, &jwtUser.Name, &jwtUser.Email, &jwtUser.Password)
+	err := repository.db.QueryRow(query, user.Email).Scan(&jwtUser.ID, &jwtUser.Name, &jwtUser.Email, &hashedPassword)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.New("user not found")
@@ -70,7 +71,7 @@ func (repository *userRepoImpl) LoginUser(user *userDTO.UserLoginRequest) (*user
 		return nil, err
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(jwtUser.Password), []byte(user.Password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(user.Password)); err != nil {
 		return nil, errors.New("invalid password")
 	}
 

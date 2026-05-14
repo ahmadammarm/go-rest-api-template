@@ -3,7 +3,6 @@ package repository
 import (
 	"database/sql"
 	"errors"
-	"strconv"
 	"time"
 
 	"github.com/ahmadammarm/go-rest-api-template/internal/news/dto"
